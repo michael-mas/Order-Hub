@@ -33,6 +33,7 @@ export default function HomePage() {
             fallbackTitle="Reprendre un périmètre plugins sans passation"
             act="flow"
             source="réponse de Michael attendue"
+            proofExpected={false}
           />
           <CaseStudy
             id="cas-commandes"
@@ -41,6 +42,7 @@ export default function HomePage() {
             fallbackTitle="Centraliser l'import des commandes"
             act="flow"
             source="PARCOURS.md § 4, cas B"
+            proofExpected={false}
           />
           <CaseStudy
             id="cas-system-alive"
@@ -49,6 +51,7 @@ export default function HomePage() {
             fallbackTitle="System://Alive"
             act="structure"
             source="chiffres à revérifier dans l'historique git du dépôt source"
+            proofExpected
           />
         </div>
         <Experience />

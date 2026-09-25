@@ -290,6 +290,12 @@ le périmètre, création de l'équipe) **ne sont pas publiées** : Michael les
 réserve à l'entretien. Les récits se situent par rapport à la chronologie
 publique (« à mon arrivée », « depuis ») sans date inventée.
 
+### Règle de distance avec l'employeur (décision 2026-09-25)
+
+Michael tient à rester discret sur son employeur. Les études de cas Lengow
+n'ont **pas de bloc « Preuve »**, et aucune surface ne parle du code de
+l'employeur (ni « code propriétaire », ni « détail en entretien »).
+
 ### Règle de présentation des chiffres (décision 2026-09-25)
 
 Michael ne veut pas d'un site qui « affiche des stats ». Règle retenue :

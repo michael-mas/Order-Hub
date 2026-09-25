@@ -11,6 +11,8 @@ interface CaseStudyProps {
   study?: CaseStudyData | undefined
   fallbackTitle: string
   source: string
+  /** Only projects Michael can show publicly get a proof block. */
+  proofExpected: boolean
 }
 
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
@@ -22,7 +24,16 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
   )
 }
 
-export function CaseStudy({ id, index, label, act, study, fallbackTitle, source }: CaseStudyProps) {
+export function CaseStudy({
+  id,
+  index,
+  label,
+  act,
+  study,
+  fallbackTitle,
+  source,
+  proofExpected,
+}: CaseStudyProps) {
   const text = (value: string | null | undefined, what: string) =>
     value ?? <Pending kind={study ? 'confirm' : 'write'}>{`${what} — ${source}`}</Pending>
 
@@ -53,7 +64,7 @@ export function CaseStudy({ id, index, label, act, study, fallbackTitle, source 
         <Block title="Ce que je ferais autrement">
           {text(study?.differently, 'ce que je ferais autrement')}
         </Block>
-        <Block title="Preuve">{text(study?.proof, 'preuve')}</Block>
+        {proofExpected && <Block title="Preuve">{text(study?.proof, 'preuve')}</Block>}
       </dl>
     </Section>
   )

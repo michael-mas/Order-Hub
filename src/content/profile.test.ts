@@ -36,6 +36,14 @@ describe('case studies', () => {
     expect(JSON.stringify(profile)).not.toMatch(/ [:;?!]/)
   })
 
+  it('keep a deliberate distance from the employer: no proof block, no "proprietary code" line', () => {
+    expect(JSON.stringify(profile)).not.toMatch(/propriétaire|en entretien/i)
+    const employerCases = profile.cases.filter((c) =>
+      ['cas-plugins', 'cas-commandes'].includes(c.id),
+    )
+    for (const c of employerCases) expect(c.proof, c.id).toBeNull()
+  })
+
   it('never name a client, an account or an order', () => {
     const text = JSON.stringify(profile.cases)
     expect(text).not.toMatch(/order_id|MARCHAND_[A-Z]|@|https?:\/\//)

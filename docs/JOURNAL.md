@@ -5,6 +5,11 @@
 
 ## 2026-09-25
 
+- **Retour de Michael sur le cas A** : pas de bloc « Preuve » — il veut rester
+  discret sur son employeur. Bloc retiré des cas Lengow (conservé pour
+  System://Alive), mentions « code propriétaire / détail en entretien »
+  retirées des compétences. Règle ajoutée à `PARCOURS.md` et `CLAUDE.md`,
+  gardée par un test.
 - **Phase 5.4 — étude de cas A rédigée** (reprise du périmètre plugins sans
   passation), depuis `PARCOURS.md` uniquement, en données typées dans
   `profile.ts` (`cases`). Gabarit fixe : contexte, problème, contrainte,

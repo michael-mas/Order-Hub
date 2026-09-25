@@ -45,7 +45,12 @@ export const caseStudySchema = z.object({
   decisions: z.array(decisionSchema).max(4),
   result: z.string().min(1).nullable(),
   differently: z.string().min(1).nullable(),
-  proof: z.string().min(1),
+  /**
+   * Public proof only (a repository, a live page). `null` for employer work:
+   * Michael keeps a deliberate distance from his employer's code (2026-09-25),
+   * so the block is omitted, not marked as missing.
+   */
+  proof: z.string().min(1).nullable(),
 })
 
 export const profileSchema = z.object({
@@ -107,13 +112,13 @@ export const profile = profileSchema.parse({
       name: 'PHP · Symfony',
       group: 'production',
       usage: 'Plugins CMS et services Lengow, de PHP 7 à 8.4 et de Symfony 4 à 7.',
-      proof: 'Production — code propriétaire, détail en entretien',
+      proof: 'En production',
     },
     {
       name: 'React · TypeScript',
       group: 'production',
       usage: 'Front React de la solution qui pilote la configuration des plugins et applications.',
-      proof: 'Production — et le code de ce site',
+      proof: 'En production — et le code de ce site',
     },
     {
       name: 'Intégrations e-commerce',
@@ -126,25 +131,25 @@ export const profile = profileSchema.parse({
       name: 'Tests · PHPUnit · Vitest · Playwright',
       group: 'production',
       usage: 'Unitaires, intégration et bout en bout, exécutés à chaque PR.',
-      proof: 'Production — et la CI de ce site',
+      proof: 'En production — et la CI de ce site',
     },
     {
       name: 'Datadog',
       group: 'production',
       usage: 'Dashboards de monitoring, alertes, exploration de logs pour diagnostiquer.',
-      proof: 'Production — détail en entretien',
+      proof: 'En production',
     },
     {
       name: 'PostgreSQL',
       group: 'production',
       usage: 'Requêtes courantes, lecture et investigation des données de production.',
-      proof: 'Production — détail en entretien',
+      proof: 'En production',
     },
     {
       name: 'Docker',
       group: 'production',
       usage: 'Environnements de développement et de test locaux.',
-      proof: 'Production',
+      proof: 'En production',
     },
     {
       name: 'Three.js · WebGL2 · GLSL',
@@ -191,8 +196,7 @@ export const profile = profileSchema.parse({
       result:
         'Plus d’erreur liée à ces causes racines, et une surveillance pour repérer les nouvelles. L’urgence passée, j’ai remboursé la dette — tests PHPUnit, Vitest et Playwright, exécutés à chaque PR — puis transmis le périmètre au développeur arrivé ensuite, avec la documentation qui manquait à mon arrivée.',
       differently: null,
-      proof:
-        'Code propriétaire, pas de lien public — je détaille volontiers l’implémentation en entretien.',
+      proof: null,
     },
   ],
 } satisfies Profile)
