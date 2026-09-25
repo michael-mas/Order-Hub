@@ -5,6 +5,12 @@
 
 ## 2026-09-25
 
+- **Accroche et « deux moitiés » rédigées** (`profile.tagline`,
+  `profile.halves`) depuis la cible validée et `PARCOURS.md`, sans chiffre ni
+  superlatif (« à l'échelle » de la formulation D retiré : pas de volume
+  publiable). Trait d'union insécable dans « e‑commerce ». Le test des
+  intitulés interdits a attrapé un champ nommé `lead` : renommé `summary`.
+  **En attente de validation.**
 - **Preuve de System://Alive : option B choisie par Michael** — pas de code
   visible ; la preuve est l'expérience en ligne
   (`profile.links.experience`). Section « Ouvrir l'expérience » remplie (lien

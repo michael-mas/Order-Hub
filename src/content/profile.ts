@@ -53,9 +53,19 @@ export const caseStudySchema = z.object({
   proof: z.string().min(1).nullable(),
 })
 
+export const halfSchema = z.object({
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  facts: z.array(z.string().min(1)).length(3),
+  href: z.string().startsWith('#'),
+})
+
 export const profileSchema = z.object({
   name: z.string().min(1),
   headline: z.string().min(1),
+  /** Second line of the hero: what the headline means, in one sentence. */
+  tagline: z.string().min(1),
+  halves: z.tuple([halfSchema, halfSchema]),
   location: z.string().min(1),
   status: z.string().min(1),
   email: z.email(),
@@ -80,7 +90,32 @@ export type CaseStudy = z.infer<typeof caseStudySchema>
 
 export const profile = profileSchema.parse({
   name: 'Michael Mas',
-  headline: 'Développeur full stack — PHP/Symfony et React/TypeScript, intégrations e-commerce',
+  headline: 'Développeur full stack — PHP/Symfony et React/TypeScript, intégrations e‑commerce',
+  tagline:
+    'Je fais tenir des intégrations e‑commerce sur des plateformes que je ne contrôle pas — catalogues, commandes, marketplaces. Et le projet que vous pouvez ouvrir en entier tourne sur votre carte graphique.',
+  halves: [
+    {
+      title: 'La production',
+      summary:
+        'Des intégrations qui relient les boutiques des marchands aux marketplaces : imports de commandes, exports catalogue, plugins.',
+      facts: [
+        'PHP/Symfony et React/TypeScript, en production',
+        'PrestaShop, Magento, WooCommerce, Shopware, Shopify — et les API des marketplaces',
+        'Tests à chaque PR, surveillance et diagnostic dans Datadog',
+      ],
+      href: '#cas-plugins',
+    },
+    {
+      title: 'Le rendu temps réel',
+      summary: 'Un portfolio 3D construit seul, et la scène de ce site.',
+      facts: [
+        'WebGL2 et shaders GLSL écrits à la main',
+        'Un chemin WebGPU exploré jusqu’au bout — et gardé en option',
+        'Une scène pilotée par le scroll, dont le placement est testé sans GPU',
+      ],
+      href: '#cas-system-alive',
+    },
+  ],
   location: 'Nantes · hybride ou remote',
   status: 'En recherche active',
   email: 'masmichael280699@gmail.com',
@@ -124,7 +159,7 @@ export const profile = profileSchema.parse({
       proof: 'En production — et le code de ce site',
     },
     {
-      name: 'Intégrations e-commerce',
+      name: 'Intégrations e‑commerce',
       group: 'production',
       usage:
         'Plugins et applications PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify ; exports catalogue et imports de commandes via les API des plateformes.',
@@ -166,7 +201,7 @@ export const profile = profileSchema.parse({
       id: 'cas-plugins',
       title: 'Des intégrations qui tiennent sur des plateformes qu’on ne contrôle pas',
       context:
-        'J’ai pris en charge les plugins et applications qui relient les boutiques des marchands à une plateforme SaaS e-commerce : PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify — exports catalogue, imports de commandes, actions de commande.',
+        'J’ai pris en charge les plugins et applications qui relient les boutiques des marchands à une plateforme SaaS e‑commerce : PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify — exports catalogue, imports de commandes, actions de commande.',
       problem:
         'Ce code tourne sur les serveurs des marchands, pas sur les nôtres. Chaque plateforme a ses versions, ses API et ses règles de publication, et chacune évolue à son rythme.',
       constraint:

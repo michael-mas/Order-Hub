@@ -23,7 +23,7 @@ export default function HomePage() {
       <SiteHeader name={profile.name} />
       <main>
         <Hero profile={profile} />
-        <TwoHalves />
+        <TwoHalves halves={profile.halves} />
         <div id="travail">
           <CaseStudy
             id="cas-plugins"

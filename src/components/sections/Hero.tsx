@@ -1,6 +1,5 @@
 import { formatMonthYear } from '@/content/format'
 import type { Profile } from '@/content/profile'
-import { Pending } from '../Pending'
 
 export function Hero({ profile }: { profile: Profile }) {
   const current = profile.positions[0]!
@@ -19,9 +18,7 @@ export function Hero({ profile }: { profile: Profile }) {
         {profile.name}
       </h1>
       <p className="mt-6 max-w-[56ch] text-lead text-text">{profile.headline}</p>
-      <p className="mt-3 max-w-[56ch] text-text-muted">
-        <Pending kind="write">phrase d&apos;accroche</Pending>
-      </p>
+      <p className="mt-3 max-w-[56ch] text-text-muted">{profile.tagline}</p>
       <ul className="label-mono mt-8 flex flex-wrap gap-x-6 gap-y-2 text-text-muted">
         <li>
           {current.title} · {current.company}
