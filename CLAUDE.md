@@ -40,12 +40,14 @@ déployée à part et sera liée comme projet phare. On ne la migre pas.
 
 ## 3. Commandes
 
-| Commande         | Rôle                                                          |
-| ---------------- | ------------------------------------------------------------- |
-| `npm run dev`    | Serveur de développement                                      |
-| `npm run verify` | typecheck + lint (0 avertissement) + format + tests unitaires |
-| `npm run e2e`    | Playwright sur le build de production (port 3100)             |
-| `npm run build`  | Build de production                                           |
+| Commande                | Rôle                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`           | Serveur de développement                                                                                                             |
+| `npm run verify`        | typecheck + lint (0 avertissement) + format + tests unitaires                                                                        |
+| `npm run e2e`           | Playwright sur le build de production (port 3100)                                                                                    |
+| `npm run build`         | Build de production                                                                                                                  |
+| `npm run capture:scene` | Rend chaque layout depuis 5 caméras fixes → `captures/scene/<date>/`                                                                 |
+| `npm run capture`       | Page réelle, 5 viewports × 8 paliers de scroll + LCP/CLS/long tasks/erreurs → `captures/page/<date>/` (lancer `npm run build` avant) |
 
 Node 22 (`.nvmrc`). Playwright est épinglé en 1.56.1 pour correspondre au
 Chromium préinstallé de l'environnement distant (`/opt/pw-browsers`) : ne pas
@@ -66,6 +68,11 @@ docs/PARCOURS.md        source de vérité des faits (validée)
 docs/JOURNAL.md         journal daté des décisions — le tenir à jour
 src/content/profile.ts  faits dérivés de PARCOURS, schéma zod, durées calculées
 src/lib/motion/damp.ts  lissage exponentiel borné
+src/scene/math/         deg() (seule écriture d'angle) ; createRandom(seed)
+src/scene/layout/       layouts en données (zod) + assertions spatiales
+                        (collisions, cadre, sol, échelle) testées sans GPU
+src/scene/debug/        caméras fixes, scène d'inspection, /dev/scene
+scripts/                capture-scene.mjs, capture-page.mjs, server.mjs
 src/app/                App Router ; contenu rendu serveur
 e2e/                    tests Playwright
 ```
@@ -89,7 +96,23 @@ Documents d'analyse de référence : dépôt source, branche
 - Budget : build total ≤ 10 Mo ; géométrie procédurale (0 octet) ; aucun
   fichier > ~400 lignes sans justification écrite.
 
-## 7. Pièges connus — ne pas les redécouvrir
+## 7. Placer un objet 3D sans se tromper
+
+1. Déclarer l'objet dans le layout de sa scène (`src/scene/layout/*.ts`) :
+   position, rotation via `deg()`, échelle, taille locale, bornes d'échelle,
+   `mustBeInFrame`, `grounded`, `solid`. Jamais de transformation en dur dans
+   un composant.
+2. `npm run test` : les assertions spatiales nomment l'objet fautif
+   (collision, hors cadre à un ratio donné, pas au sol, échelle hors bornes).
+   Tout nouveau layout s'ajoute à `LAYOUTS` pour être couvert.
+3. `npm run capture:scene` puis **regarder** les PNG (face, dessus, côté,
+   iso, production). `/dev/scene?layout=hero&view=iso` en dev ; `D` masque la
+   surimpression.
+4. Headless : WebGL passe par SwiftShader (`WEBGL_ARGS` dans
+   `scripts/server.mjs`) ; attendre `body[data-scene-ready]` en `state:
+'attached'` (le body a une hauteur nulle).
+
+## 8. Pièges connus — ne pas les redécouvrir
 
 - **Lerp écrit à la main interdit.** `lerp(a, b, dt * k)` extrapole dès que
   `dt * k > 1` (bug historique `CatmullRomCurve3.getPoint`). Utiliser
@@ -97,16 +120,28 @@ Documents d'analyse de référence : dépôt source, branche
 - **Le scroll ne passe pas par React** : store mutable lu par la boucle de
   rendu ; les composants ne s'abonnent qu'aux changements de section.
 - **Raycast sur une liste explicite**, au plus une fois par frame.
-- **Tout procédural passe par un PRNG à graine explicite.**
-- **Rotations en radians**, via un helper `deg()` unique.
+- **Tout procédural passe par un PRNG à graine explicite** — `Math.random`
+  est interdit par lint dans `src/scene`.
+- **Rotations en radians**, via `deg()` — les littéraux de rotation bruts sont
+  interdits par lint, comme les appels `lerp` sans `dampFactor`.
 - TypeScript 7 : incompatible avec typescript-eslint (< 6.1) à ce jour.
 - Ancien dépôt : `ParticleField` recalculait 60 000 particules sur le CPU à
   chaque frame ; le mobile ouvrait trois contextes WebGL ; la fonte Bulzing
   est sous licence non commerciale. Rien de cela ne revient.
 
-## 8. Où on en est
+## 9. Où on en est
 
 Voir la dernière entrée de `docs/JOURNAL.md`. Ordre de construction : outillage
 (captures déterministes, tests d'assertion spatiale) → ossature + design
 system → scénographie → contenu réel → accessibilité, SEO, CV PDF → liens
 vers l'expérience 3D et `/codemylife`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

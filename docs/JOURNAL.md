@@ -5,6 +5,20 @@
 
 ## 2026-09-25
 
+- **Phase 3 — outillage 3D, avant tout objet.** Layouts déclarés en données
+  (zod) ; assertions spatiales pures (collisions nommées par paire, cadrage à 6
+  ratios de 360×800 à 2560×1080, sol, bornes d'échelle) testées sans GPU, avec
+  des tests qui prouvent que chaque vérification détecte bien son défaut.
+  Caméra de production ajustée sur le FOV le plus étroit (le portrait est
+  limité horizontalement). `deg()`, PRNG à graine. Lint : rotations brutes,
+  `lerp` sans `dampFactor` et `Math.random` en scène interdits.
+  `/dev/scene` (404 en production, testé) + surimpression d'inspection.
+  `npm run capture:scene` (5 caméras fixes) et `npm run capture` (5 viewports
+  × 8 paliers, LCP/CLS/long tasks/erreurs) ; sorties dans `captures/`, ignoré
+  par git. Premier relevé local, non bridé, page provisoire : LCP 48-96 ms,
+  CLS 0, 0 long task, 0 erreur, aucun débordement horizontal.
+  Layout `hero` provisoire : `flow`, `structure`, `floor`, `backdrop` —
+  volumes de placement, la scénographie réelle viendra ensuite.
 - **Manuel d'exploitation `CLAUDE.md`** créé à la racine. Michael a choisi de
   garder ce nom (exception explicite à la règle « aucune mention d'outil »),
   pour que les sessions suivantes démarrent seules.
