@@ -161,40 +161,40 @@ export const profile = profileSchema.parse({
   cases: [
     {
       id: 'cas-plugins',
-      title: 'Reprendre un périmètre d’intégrations sans passation, et le stabiliser',
+      title: 'Des intégrations qui tiennent sur des plateformes qu’on ne contrôle pas',
       context:
-        'À mon arrivée chez Lengow, comme Software Support Developer, j’ai reçu les dépôts des plugins et des applications, et la file de support qui allait avec — sans passation. Le périmètre : PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify.',
+        'J’ai pris en charge les plugins et applications qui relient les boutiques des marchands à une plateforme SaaS e-commerce : PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify — exports catalogue, imports de commandes, actions de commande.',
       problem:
-        'Des imports de commandes échouaient, certains exports catalogue aussi, et plusieurs plugins avaient pris du retard sur les nouvelles versions des CMS. Chaque ticket touchait une plateforme que je devais d’abord apprendre à installer et à faire tourner.',
+        'Ce code tourne sur les serveurs des marchands, pas sur les nôtres. Chaque plateforme a ses versions, ses API et ses règles de publication, et chacune évolue à son rythme.',
       constraint:
-        'Tout arrivait en même temps, sans historique ni personne à qui demander. Les erreurs dépendaient de l’environnement du marchand — version de PHP, configuration du serveur, taille du catalogue — que je ne contrôlais pas, et les tableaux de bord des éditeurs ne gardaient guère plus qu’un code d’erreur.',
+        'Les erreurs dépendent d’un environnement que je ne contrôle pas — version de PHP, configuration du serveur, taille du catalogue — et les tableaux de bord des éditeurs ne conservent guère plus qu’un code d’erreur. Chaque plateforme s’apprend en la faisant tourner soi-même.',
       decisions: [
         {
-          choice: 'Les problèmes qui touchaient les marchands d’abord, la compatibilité ensuite.',
-          rejected: 'Rattraper d’abord les retards de compatibilité.',
-          why: 'Un marchand dont les commandes ne remontent plus est un marchand qui s’en va.',
+          choice: 'Traiter d’abord ce qui touche les marchands, la compatibilité ensuite.',
+          rejected: 'L’ordre inverse.',
+          why: 'Un marchand dont les commandes ne remontent pas ne peut pas attendre.',
         },
         {
           choice:
-            'Une exception : l’application Shopify passée en tête dès l’avertissement de retrait pour non-conformité — API dépréciée et taux d’erreur élevé sur les webhooks. Un mois accordé ; livré en deux semaines, sans avoir jamais touché Shopify, avec une relance de leur support pour accélérer la revue.',
-          rejected: 'Appliquer la règle de priorité sans exception.',
-          why: 'Le retrait menaçait l’application entière, pas un marchand.',
+            'Une exception : une mise en conformité exigée par l’éditeur d’une plateforme — API dépréciée, taux d’erreur des webhooks — avec un mois de délai. Livrée en deux semaines, sans connaître la plateforme au départ, en sollicitant son support pour accélérer la revue.',
+          rejected: 'Appliquer la règle sans exception.',
+          why: 'L’enjeu dépassait un seul marchand.',
         },
         {
           choice:
             'Diagnostiquer de mon côté : logs des plugins, reproduction locale, puis Datadog.',
-          rejected: 'S’appuyer sur les tableaux de bord partenaires des éditeurs.',
+          rejected: 'S’appuyer sur les tableaux de bord des éditeurs.',
           why: 'Rétention courte, et guère plus qu’un code d’erreur.',
         },
         {
           choice:
-            'Rendre les plugins rétrocompatibles sur une plage de versions, et déprécier au fur et à mesure celles que les éditeurs eux-mêmes ne supportaient plus.',
+            'Rendre les plugins rétrocompatibles sur une plage de versions, et déprécier au fur et à mesure celles que les éditeurs eux-mêmes ne supportent plus.',
           rejected: 'Maintenir toutes les versions indéfiniment.',
-          why: 'Les éditeurs eux-mêmes ne les maintenaient plus.',
+          why: 'Les éditeurs eux-mêmes ne les maintiennent plus.',
         },
       ],
       result:
-        'Plus d’erreur liée à ces causes racines, et une surveillance pour repérer les nouvelles. L’urgence passée, j’ai remboursé la dette — tests PHPUnit, Vitest et Playwright, exécutés à chaque PR — puis transmis le périmètre au développeur arrivé ensuite, avec la documentation qui manquait à mon arrivée.',
+        'Les erreurs liées à ces causes racines ne reviennent plus, et une surveillance repère les nouvelles. J’ai ensuite ajouté des tests PHPUnit, Vitest et Playwright exécutés à chaque PR, écrit la documentation technique du périmètre et formé le développeur qui m’a rejoint.',
       differently: null,
       proof: null,
     },

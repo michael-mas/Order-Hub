@@ -296,6 +296,16 @@ Michael tient à rester discret sur son employeur. Les études de cas Lengow
 n'ont **pas de bloc « Preuve »**, et aucune surface ne parle du code de
 l'employeur (ni « code propriétaire », ni « détail en entretien »).
 
+### Règle de neutralité des études de cas (décision 2026-09-25)
+
+Michael veut rester le plus neutre possible et ne jamais donner l'impression de
+se plaindre. Dans les études de cas : pas de nom d'employeur (« une plateforme
+SaaS e-commerce »), pas de « sans passation », pas de description de l'état du
+produit, pas d'épisode qui expose l'entreprise (l'avertissement de retrait
+devient « une mise en conformité exigée par l'éditeur d'une plateforme »).
+Récit au présent, centré sur ce que Michael fait et décide. Lengow reste nommé
+dans le parcours, où c'est un fait public.
+
 ### Règle de présentation des chiffres (décision 2026-09-25)
 
 Michael ne veut pas d'un site qui « affiche des stats ». Règle retenue :

@@ -5,6 +5,11 @@
 
 ## 2026-09-25
 
+- **Cas A réécrit en ton neutre** à la demande de Michael : employeur non
+  nommé, plus de « sans passation », plus d'état du produit, épisode Shopify
+  devenu « mise en conformité exigée par l'éditeur d'une plateforme ». Récit
+  au présent. Test : pas de nom d'employeur ni de vocabulaire de plainte dans
+  les études de cas.
 - **Retour de Michael sur le cas A** : pas de bloc « Preuve » — il veut rester
   discret sur son employeur. Bloc retiré des cas Lengow (conservé pour
   System://Alive), mentions « code propriétaire / détail en entretien »
