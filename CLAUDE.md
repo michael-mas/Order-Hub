@@ -140,10 +140,12 @@ Documents d'analyse de référence : dépôt source, branche
 
 ## 8. Scénographie
 
-- Deux nuages de points dans les volumes `flow` et `structure` du layout ;
-  leur présence suit `ACT_STATES` (storyboard) selon la progression du
-  document, avec des seuils mesurés sur les vraies sections
-  (`data-scene-act`), jamais écrits en dur.
+- Un seul sujet (`subject` du layout) : trois formes par point (noyau, flux,
+  treillis) mélangées au vertex shader selon `ACT_STATES` (storyboard), plus
+  une dispersion bornée (`acts/subject.ts`). Seuils mesurés sur les vraies
+  sections (`data-scene-act`), jamais écrits en dur. Sombre par défaut.
+- Objet qui tourne (`rotates: true`) → vérifié par sa sphère englobante.
+- `?governor=off` : diagnostic pour les captures uniquement.
 - **Bande de texte** : en paysage, le sujet est décalé à droite
   (`shiftLandscape`) et le test `findTextBandIntrusions` interdit tout objet
   cadré à gauche de `textBandNdcX`. En portrait, sujet décalé vers le bas et

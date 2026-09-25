@@ -29,7 +29,8 @@ export function ScenePortal() {
     let dispose: (() => void) | undefined
     void import('@/scene/Scenography').then(({ startScenography }) => {
       if (disposed) return
-      const handle = startScenography(canvas, tier, () => setTier('off'))
+      const governor = new URLSearchParams(window.location.search).get('governor') !== 'off'
+      const handle = startScenography(canvas, tier, () => setTier('off'), { governor })
       dispose = handle.dispose
       document.documentElement.dataset.scene = tier
     })
@@ -42,10 +43,8 @@ export function ScenePortal() {
 
   if (tier === 'off') return null
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 -z-10 h-full w-full"
-    />
+    <div className="scene-layer" aria-hidden="true">
+      <canvas ref={canvasRef} className="block h-full w-full" />
+    </div>
   )
 }

@@ -37,14 +37,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: themes.light.bg },
-    { media: '(prefers-color-scheme: dark)', color: themes.dark.bg },
-  ],
+  themeColor: themes.dark.bg,
 }
 
-/** Applies a stored manual theme before first paint — no flash. */
-const themeBootstrap = `try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`
+/** Before first paint: stored theme (no flash), and motion on unless the visitor asked for less. */
+const themeBootstrap = `try{var d=document.documentElement,t=localStorage.getItem('theme');if(t==='light'||t==='dark')d.dataset.theme=t;if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.dataset.motion='on'}catch(e){}`
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

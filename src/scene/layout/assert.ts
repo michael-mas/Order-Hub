@@ -2,7 +2,7 @@
  * Spatial assertions over a scene layout. Pure three.js math — runs in Node,
  * no GPU. Each check returns human-readable problems naming the culprit.
  */
-import { Box3, Euler, Frustum, Matrix4, Quaternion, Vector3 } from 'three'
+import { Box3, Euler, Frustum, Matrix4, Quaternion, Sphere, Vector3 } from 'three'
 import { createProductionCamera } from './camera'
 import { FRAME_ASPECTS, type LayoutEntry, type SceneLayout } from './schema'
 
@@ -17,8 +17,38 @@ export function worldMatrix(entry: LayoutEntry): Matrix4 {
   )
 }
 
+/** Sphere containing every rotation of an entry about its origin. */
+export function worldSphere(entry: LayoutEntry): Sphere {
+  return new Sphere(
+    new Vector3(...entry.position),
+    (new Vector3(...entry.size).length() / 2) * entry.scale,
+  )
+}
+
+/** Points spread over a sphere, to find its projected extent. */
+function spherePoints(sphere: Sphere, samples = 96): Vector3[] {
+  const out: Vector3[] = []
+  const golden = Math.PI * (3 - Math.sqrt(5))
+  for (let i = 0; i < samples; i++) {
+    const y = 1 - (2 * (i + 0.5)) / samples
+    const r = Math.sqrt(1 - y * y)
+    const a = golden * i
+    out.push(
+      new Vector3(Math.cos(a) * r, y, Math.sin(a) * r)
+        .multiplyScalar(sphere.radius)
+        .add(sphere.center),
+    )
+  }
+  return out
+}
+
 /** Axis-aligned world box of an entry, after rotation and scale. */
 export function worldBox(entry: LayoutEntry): Box3 {
+  if (entry.rotates) {
+    const radius = (new Vector3(...entry.size).length() / 2) * entry.scale
+    const centre = new Vector3(...entry.position)
+    return new Box3(centre.clone().subScalar(radius), centre.clone().addScalar(radius))
+  }
   const half = new Vector3(...entry.size).multiplyScalar(0.5)
   return new Box3(half.clone().negate(), half).applyMatrix4(worldMatrix(entry))
 }
@@ -57,6 +87,15 @@ export function findOutOfFrame(
       new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse),
     )
     for (const entry of layout.entries.filter((e) => e.mustBeInFrame)) {
+      if (entry.rotates) {
+        const sphere = worldSphere(entry)
+        const inside = frustum.planes.every(
+          (plane) => plane.distanceToPoint(sphere.center) >= sphere.radius,
+        )
+        if (!inside)
+          problems.push(`out of frame: "${entry.name}" (rotating) at aspect ${aspect.toFixed(2)}`)
+        continue
+      }
       const outside = corners(worldBox(entry)).filter((c) => !frustum.containsPoint(c))
       if (outside.length > 0) {
         problems.push(
@@ -79,7 +118,8 @@ export function findTextBandIntrusions(
   for (const aspect of aspects.filter((a) => a >= 1)) {
     const camera = createProductionCamera(layout.camera, aspect)
     for (const entry of layout.entries.filter((e) => e.mustBeInFrame)) {
-      const minX = Math.min(...corners(worldBox(entry)).map((c) => c.clone().project(camera).x))
+      const points = entry.rotates ? spherePoints(worldSphere(entry)) : corners(worldBox(entry))
+      const minX = Math.min(...points.map((c) => c.clone().project(camera).x))
       if (minX < limit) {
         problems.push(
           `text band: "${entry.name}" reaches x=${minX.toFixed(2)} (NDC) at aspect ${aspect.toFixed(2)}, limit ${limit}`,

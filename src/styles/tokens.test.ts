@@ -31,10 +31,10 @@ describe('contrastRatio', () => {
 })
 
 describe('themeCss', () => {
-  it('declares every token for both themes and honours a manual override', () => {
+  it('is dark by default and light only on a manual choice', () => {
     const css = themeCss()
     expect(css).toContain('--text-muted:')
-    expect(css).toContain(':root[data-theme="dark"]')
-    expect(css).toContain(':root:not([data-theme="light"])')
+    expect(css.startsWith(':root{color-scheme:dark;')).toBe(true)
+    expect(css).toContain(':root[data-theme="light"]')
   })
 })

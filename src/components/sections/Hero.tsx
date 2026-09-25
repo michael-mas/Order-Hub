@@ -19,7 +19,7 @@ export function Hero({ profile }: { profile: Profile }) {
       </h1>
       <p className="mt-6 max-w-[56ch] text-lead text-text">{profile.headline}</p>
       <p className="mt-3 max-w-[56ch] text-text-muted">{profile.tagline}</p>
-      <ul className="label-mono mt-8 flex flex-wrap gap-x-6 gap-y-2 text-text-muted">
+      <ul className="label-mono mt-8 flex max-w-[64ch] flex-wrap gap-x-6 gap-y-2 text-text-muted">
         <li>
           {current.title} · {current.company}
         </li>
@@ -27,7 +27,12 @@ export function Hero({ profile }: { profile: Profile }) {
           chez {current.company} depuis {formatMonthYear(lengowStart)}
         </li>
         <li>{profile.location}</li>
-        <li className="text-accent">{profile.status}</li>
+        <li className="text-accent">
+          {profile.status}
+          <span className="caret" aria-hidden="true">
+            ▍
+          </span>
+        </li>
       </ul>
       <div className="mt-10 flex flex-wrap gap-3">
         <a

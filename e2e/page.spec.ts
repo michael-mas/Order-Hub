@@ -29,13 +29,15 @@ test('the contact address is in clear text', async ({ page }) => {
   await expect(page.locator('#contact a[href^="mailto:"]')).toHaveText('masmichael280699@gmail.com')
 })
 
-test('the theme toggle switches and remembers the theme', async ({ page }) => {
+test('dark by default; the toggle switches to light and remembers it', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await page.goto('/')
-  await page.getByRole('button', { name: /thème sombre/ }).click()
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  expect(bg).toBe('rgb(10, 14, 20)')
+  await page.getByRole('button', { name: /thème clair/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
   await page.reload()
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
 })
 
 test('no horizontal overflow at 360 px', async ({ page }) => {

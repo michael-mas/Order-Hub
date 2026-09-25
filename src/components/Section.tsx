@@ -20,12 +20,14 @@ export function Section({ id, index, label, title, act, children }: SectionProps
       data-scene-act={act}
       className="mx-auto max-w-[1120px] scroll-mt-16 px-[var(--gutter)] py-[var(--section-py)]"
     >
-      <p className="label-mono text-text-faint">
-        {String(index).padStart(2, '0')} / {label}
-      </p>
-      <h2 id={headingId} className="mt-4 text-h2 leading-[1.12] font-bold tracking-[-0.02em]">
-        {title}
-      </h2>
+      <div className="reveal">
+        <p className="label-mono text-text-faint">
+          {String(index).padStart(2, '0')} / {label}
+        </p>
+        <h2 id={headingId} className="mt-4 text-h2 leading-[1.12] font-bold tracking-[-0.02em]">
+          {title}
+        </h2>
+      </div>
       <div className="mt-8">{children}</div>
     </section>
   )

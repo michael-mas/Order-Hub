@@ -30,6 +30,11 @@ export const entrySchema = z
     grounded: z.boolean(),
     /** Takes part in the pairwise non-collision check. */
     solid: z.boolean(),
+    /**
+     * Rotated at runtime (pointer, idle spin). Checks then use the box that
+     * contains every possible rotation: a cube whose side is the diagonal.
+     */
+    rotates: z.boolean().default(false),
   })
   .refine((e) => e.scaleRange[0] <= e.scaleRange[1], 'scaleRange min > max')
 

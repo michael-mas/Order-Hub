@@ -1,69 +1,90 @@
 /**
- * The home-page scenography: one canvas, one context, one loop. Two procedural
- * point sets placed by HERO_LAYOUT, whose presence follows the storyboard as
- * the page scrolls. Loaded lazily, after the text has painted.
+ * The home-page scenography: one canvas, one context, one loop, one subject.
+ * The subject blends three procedural shapes following the storyboard, spins
+ * slowly and leans toward the pointer. Loaded lazily, after the text paints.
  */
-import { BufferAttribute, BufferGeometry, Color, Points, Scene, WebGLRenderer } from 'three'
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  Euler,
+  Group,
+  Points,
+  Scene,
+  WebGLRenderer,
+} from 'three'
 import { damp } from '@/lib/motion/damp'
-import { createPointsPass, type PointsKind, type PointsPass } from './acts/pointsMaterial'
-import { flowLanes, lattice, seeds } from './acts/shapes'
+import { createPointsPass, setBlending } from './acts/pointsMaterial'
+import { coreSphere, flowLanes, lattice, seeds, type Size3 } from './acts/shapes'
 import { keyframesFromSections, stateAt, type Keyframe, type StoryState } from './acts/storyboard'
+import { MAX_BURST, SHAPE_SCALE } from './acts/subject'
 import { createGovernor } from './device/governor'
 import { TIER_BUDGETS, renderDpr, type Tier } from './device/tiers'
 import { browserPlatform, createLoop } from './engine/loop'
-import { worldMatrix } from './layout/assert'
 import { createProductionCamera } from './layout/camera'
 import { HERO_LAYOUT } from './layout'
 import { createRandom } from './math/random'
 import { documentProgress } from './scroll/progress'
 
-/** Keeps body text readable over the scene: points never exceed this opacity. */
-const MAX_CORE_ALPHA = 0.55
-const HALO_RATIO = 0.18
-const RESPONSE = 3.5
-/** Portrait screens have no free band beside the text: the scene steps back. */
-const PORTRAIT_ALPHA = 0.55
-
-interface Layer {
-  kind: PointsKind
-  pass: PointsPass
-  geometry: BufferGeometry
-}
+/** Core opacity when the subject sits beside the text (landscape). */
+const LANDSCAPE_ALPHA = 0.85
+/** Portrait screens have no free band: the subject steps back behind the text. */
+const PORTRAIT_ALPHA = 0.3
+const HALO_RATIO = 0.22
+const RESPONSE = 3
+const POINTER_RESPONSE = 4
+/** Radians the subject leans toward the pointer, at most. */
+const POINTER_LEAN_Y = 0.35
+const POINTER_LEAN_X = 0.2
+/** Idle spin, radians per second at full energy. */
+const SPIN = 0.12
 
 export interface ScenographyHandle {
   dispose(): void
+}
+
+export interface ScenographyOptions {
+  /**
+   * Diagnostic only (`?governor=off`): keep the initial tier whatever the frame
+   * times. Used by capture scripts, whose software renderer is far slower than
+   * any real GPU and would otherwise switch the scene off.
+   */
+  governor: boolean
 }
 
 export function startScenography(
   canvas: HTMLCanvasElement,
   initialTier: Exclude<Tier, 'off'>,
   onTierOff: () => void,
+  options: ScenographyOptions = { governor: true },
 ): ScenographyHandle {
   let tier: Exclude<Tier, 'off'> = initialTier
   const budget = TIER_BUDGETS[tier]
   const renderer = new WebGLRenderer({ canvas, antialias: budget.antialias, alpha: true })
   renderer.setClearColor(0x000000, 0)
   const scene = new Scene()
-  const random = createRandom(20260925)
 
-  const layers: Layer[] = (['flow', 'structure'] as const).map((kind) => {
-    const entry = HERO_LAYOUT.entries.find((e) => e.name === kind)!
-    const count = Math.round(budget.particles * (kind === 'flow' ? 0.6 : 0.4))
-    const positions =
-      kind === 'flow' ? flowLanes(count, random, entry.size) : lattice(count, random, entry.size)
-    const geometry = new BufferGeometry()
-    geometry.setAttribute('position', new BufferAttribute(positions, 3))
-    geometry.setAttribute('aSeed', new BufferAttribute(seeds(count, random), 1))
-    const pass = createPointsPass(kind, entry.size[0], 1)
-    for (const material of [pass.halo, pass.core]) {
-      const points = new Points(geometry, material)
-      points.matrixAutoUpdate = false
-      points.matrix.copy(worldMatrix(entry))
-      points.frustumCulled = false
-      scene.add(points)
-    }
-    return { kind, pass, geometry }
-  })
+  const entry = HERO_LAYOUT.entries.find((e) => e.name === 'subject')!
+  const box = entry.size.map((v) => v * SHAPE_SCALE) as unknown as Size3
+  const count = budget.particles
+  const random = createRandom(20260925)
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(flowLanes(count, random, box), 3))
+  geometry.setAttribute('aCore', new BufferAttribute(coreSphere(count, random, box), 3))
+  geometry.setAttribute('aLattice', new BufferAttribute(lattice(count, random, box), 3))
+  geometry.setAttribute('aSeed', new BufferAttribute(seeds(count, random), 1))
+
+  const pass = createPointsPass(box[0], MAX_BURST)
+  const subject = new Group()
+  subject.position.set(...entry.position)
+  subject.scale.setScalar(entry.scale)
+  for (const material of [pass.halo, pass.core]) {
+    const points = new Points(geometry, material)
+    points.frustumCulled = false
+    subject.add(points)
+  }
+  scene.add(subject)
+  const base = new Euler(...entry.rotation)
 
   let camera = createProductionCamera(HERO_LAYOUT.camera, 1)
   let keyframes: Keyframe[] = []
@@ -75,10 +96,7 @@ export function startScenography(
     renderer.setPixelRatio(dpr)
     renderer.setSize(w, h, false)
     camera = createProductionCamera(HERO_LAYOUT.camera, w / h)
-    for (const layer of layers) {
-      for (const m of [layer.pass.core, layer.pass.halo])
-        m.uniforms.uPixelRatio!.value = dpr * (h / 800)
-    }
+    for (const m of [pass.core, pass.halo]) m.uniforms.uPixelRatio!.value = dpr * (h / 800)
     const sections = [...document.querySelectorAll<HTMLElement>('[data-scene-act]')].map((el) => {
       const rect = el.getBoundingClientRect()
       return { act: el.dataset.sceneAct ?? '', top: rect.top + window.scrollY, height: rect.height }
@@ -86,28 +104,36 @@ export function startScenography(
     keyframes = keyframesFromSections(sections, document.documentElement.scrollHeight, h)
   }
 
-  const applyColor = () => {
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
+  const applyTheme = () => {
+    const root = document.documentElement
+    const accent = getComputedStyle(root).getPropertyValue('--accent').trim()
     const color = new Color(accent || '#3ddc97')
-    for (const layer of layers) {
-      layer.pass.core.uniforms.uColor!.value.copy(color)
-      layer.pass.halo.uniforms.uColor!.value.copy(color)
-    }
+    pass.core.uniforms.uColor!.value.copy(color)
+    pass.halo.uniforms.uColor!.value.copy(color)
+    setBlending(pass, root.dataset.theme !== 'light')
   }
 
-  const themeObserver = new MutationObserver(applyColor)
+  const pointer = { x: 0, y: 0 }
+  const lean = { x: 0, y: 0 }
+  const finePointer = window.matchMedia('(pointer: fine)').matches
+  const onPointer = (event: PointerEvent) => {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+    pointer.y = (event.clientY / window.innerHeight) * 2 - 1
+  }
+
+  const themeObserver = new MutationObserver(applyTheme)
   themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['data-theme'],
   })
-  const scheme = window.matchMedia('(prefers-color-scheme: dark)')
-  scheme.addEventListener('change', applyColor)
   window.addEventListener('resize', resize)
-  applyColor()
+  if (finePointer) window.addEventListener('pointermove', onPointer, { passive: true })
+  applyTheme()
   resize()
 
   const governor = createGovernor(tier)
   let state: StoryState = stateAt(0, keyframes)
+  let spin = 0
 
   const loop = createLoop(browserPlatform, ({ dt, frameMs, elapsed }) => {
     const p = documentProgress(
@@ -117,22 +143,31 @@ export function startScenography(
     )
     const target = stateAt(p, keyframes)
     state = {
+      core: damp(state.core, target.core, RESPONSE, dt),
       flow: damp(state.flow, target.flow, RESPONSE, dt),
-      structure: damp(state.structure, target.structure, RESPONSE, dt),
+      lattice: damp(state.lattice, target.lattice, RESPONSE, dt),
       energy: damp(state.energy, target.energy, RESPONSE, dt),
+      burst: damp(state.burst, target.burst, RESPONSE, dt),
     }
-    for (const layer of layers) {
-      const presence = layer.kind === 'flow' ? state.flow : state.structure
-      const orientation = window.innerWidth >= window.innerHeight ? 1 : PORTRAIT_ALPHA
-      const alpha = MAX_CORE_ALPHA * orientation * presence * (0.35 + 0.65 * state.energy)
-      layer.pass.core.uniforms.uAlpha!.value = alpha
-      layer.pass.halo.uniforms.uAlpha!.value = alpha * HALO_RATIO
-      layer.pass.core.uniforms.uTime!.value = elapsed
-      layer.pass.halo.uniforms.uTime!.value = elapsed
+    const sum = state.core + state.flow + state.lattice || 1
+    const orientation = window.innerWidth >= window.innerHeight ? LANDSCAPE_ALPHA : PORTRAIT_ALPHA
+    const alpha = orientation * (0.45 + 0.55 * state.energy)
+    for (const m of [pass.core, pass.halo]) {
+      m.uniforms.uWeights!.value.set(state.core / sum, state.flow / sum, state.lattice / sum)
+      m.uniforms.uBurst!.value = state.burst
+      m.uniforms.uTime!.value = elapsed
     }
+    pass.core.uniforms.uAlpha!.value = alpha
+    pass.halo.uniforms.uAlpha!.value = alpha * HALO_RATIO
+
+    spin += dt * SPIN * (0.4 + 0.6 * state.energy)
+    lean.x = damp(lean.x, pointer.y * POINTER_LEAN_X, POINTER_RESPONSE, dt)
+    lean.y = damp(lean.y, pointer.x * POINTER_LEAN_Y, POINTER_RESPONSE, dt)
+    subject.rotation.set(base.x + lean.x, base.y + spin + lean.y, base.z)
+
     renderer.render(scene, camera)
 
-    const demoted = governor.record(frameMs)
+    const demoted = options.governor ? governor.record(frameMs) : null
     if (demoted === 'off') onTierOff()
     else if (demoted) {
       tier = demoted
@@ -147,13 +182,11 @@ export function startScenography(
     dispose() {
       loop.stop()
       themeObserver.disconnect()
-      scheme.removeEventListener('change', applyColor)
       window.removeEventListener('resize', resize)
-      for (const layer of layers) {
-        layer.geometry.dispose()
-        layer.pass.core.dispose()
-        layer.pass.halo.dispose()
-      }
+      window.removeEventListener('pointermove', onPointer)
+      geometry.dispose()
+      pass.core.dispose()
+      pass.halo.dispose()
       renderer.dispose()
     },
   }

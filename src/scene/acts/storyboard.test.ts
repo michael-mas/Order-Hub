@@ -33,11 +33,24 @@ describe('stateAt', () => {
     expect(at(1)).toEqual(ACT_STATES.contact)
   })
 
-  it('lets the flow dominate the e-commerce cases and the structure dominate System://Alive', () => {
+  it('becomes a flow on the e-commerce cases and a lattice on System://Alive', () => {
     const flowCase = at(keyframes.find((k) => k.state === ACT_STATES.flow)!.at)
     const structureCase = at(keyframes.find((k) => k.state === ACT_STATES.structure)!.at)
-    expect(flowCase.flow).toBeGreaterThan(flowCase.structure)
-    expect(structureCase.structure).toBeGreaterThan(structureCase.flow)
+    expect(flowCase.flow).toBe(1)
+    expect(structureCase.lattice).toBe(1)
+  })
+
+  it('keeps shape weights summing to 1 everywhere', () => {
+    for (let i = 0; i <= 200; i++) {
+      const s = at(i / 200)
+      expect(s.core + s.flow + s.lattice).toBeCloseTo(1, 9)
+    }
+  })
+
+  it('bursts only around the threshold', () => {
+    expect(at(0).burst).toBe(0)
+    expect(at(1).burst).toBe(0)
+    expect(at(keyframes.find((k) => k.state === ACT_STATES.threshold)!.at).burst).toBe(1)
   })
 
   it('peaks at the experience threshold', () => {
@@ -54,6 +67,7 @@ describe('stateAt', () => {
       const b = at((i + 1) / 1000)
       expect(Math.abs(a.energy - b.energy)).toBeLessThan(0.05)
       expect(Math.abs(a.flow - b.flow)).toBeLessThan(0.05)
+      expect(Math.abs(a.burst - b.burst)).toBeLessThan(0.05)
     }
   })
 

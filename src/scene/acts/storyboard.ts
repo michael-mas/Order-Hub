@@ -1,31 +1,47 @@
 /**
  * What the scenography says at each point of the page (04-STRUCTURE-CONTENU
- * § 1.5): at rest on the hero, two halves, the flow dominates the e-commerce
- * cases, the structure dominates System://Alive, peak density at the
- * experience threshold, then a steady decay to calm by the contact section.
+ * § 1.5): one subject that is a core at rest on the hero, becomes a flow of
+ * data on the e-commerce cases, a computed lattice on System://Alive, bursts
+ * at the experience threshold, then settles back to a calm core.
  *
  * Thresholds are never literals: they are derived from where each section
  * actually sits in the document, so editing the copy cannot break the story.
  */
 
 export interface StoryState {
-  /** Presence of the ordered flow, [0, 1]. */
+  /** Shape weights — they always sum to 1. */
+  core: number
   flow: number
-  /** Presence of the computed structure, [0, 1]. */
-  structure: number
-  /** Overall brightness and motion, [0, 1]. */
+  lattice: number
+  /** Brightness and motion, [0, 1]. */
   energy: number
+  /** Radial dispersion, [0, 1] (scaled by MAX_BURST in the shader). */
+  burst: number
 }
 
+const state = (
+  core: number,
+  flow: number,
+  lattice: number,
+  energy: number,
+  burst = 0,
+): StoryState => ({
+  core,
+  flow,
+  lattice,
+  energy,
+  burst,
+})
+
 export const ACT_STATES: Readonly<Record<string, StoryState>> = {
-  hero: { flow: 0.55, structure: 0.55, energy: 0.35 },
-  halves: { flow: 0.7, structure: 0.7, energy: 0.45 },
-  flow: { flow: 1, structure: 0.2, energy: 0.6 },
-  structure: { flow: 0.2, structure: 1, energy: 0.6 },
-  threshold: { flow: 1, structure: 1, energy: 1 },
-  skills: { flow: 0.35, structure: 0.35, energy: 0.3 },
-  path: { flow: 0.25, structure: 0.25, energy: 0.2 },
-  contact: { flow: 0.12, structure: 0.12, energy: 0.1 },
+  hero: state(1, 0, 0, 0.75),
+  halves: state(0.4, 0.3, 0.3, 0.65),
+  flow: state(0, 1, 0, 0.75),
+  structure: state(0, 0, 1, 0.75),
+  threshold: state(0.34, 0.33, 0.33, 1, 1),
+  skills: state(0.4, 0, 0.6, 0.5),
+  path: state(1, 0, 0, 0.4),
+  contact: state(1, 0, 0, 0.3),
 }
 
 export interface SectionBox {
@@ -73,10 +89,13 @@ export function stateAt(p: number, keyframes: readonly Keyframe[]): StoryState {
 }
 
 function mix(a: StoryState, b: StoryState, t: number): StoryState {
+  const m = (x: number, y: number) => x + (y - x) * t
   return {
-    flow: a.flow + (b.flow - a.flow) * t,
-    structure: a.structure + (b.structure - a.structure) * t,
-    energy: a.energy + (b.energy - a.energy) * t,
+    core: m(a.core, b.core),
+    flow: m(a.flow, b.flow),
+    lattice: m(a.lattice, b.lattice),
+    energy: m(a.energy, b.energy),
+    burst: m(a.burst, b.burst),
   }
 }
 

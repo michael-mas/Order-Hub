@@ -12,7 +12,7 @@ export type Size3 = readonly [number, number, number]
  * An ordered flow: particles on parallel lanes that run along X, with a gentle
  * vertical wave. Reads as data moving in one direction.
  */
-export function flowLanes(count: number, random: Random, size: Size3, lanes = 14): Float32Array {
+export function flowLanes(count: number, random: Random, size: Size3, lanes = 9): Float32Array {
   const [w, h, d] = size
   const out = new Float32Array(count * 3)
   for (let i = 0; i < count; i++) {
@@ -22,8 +22,8 @@ export function flowLanes(count: number, random: Random, size: Size3, lanes = 14
     const x = (t - 0.5) * w
     const wave = Math.sin(t * Math.PI * 2 + lane) * h * 0.04
     out[i * 3] = x
-    out[i * 3 + 1] = clamp(laneY + wave + (random() - 0.5) * h * 0.02, h / 2)
-    out[i * 3 + 2] = (random() - 0.5) * d * 0.9
+    out[i * 3 + 1] = clamp(laneY + wave + (random() - 0.5) * h * 0.012, h / 2)
+    out[i * 3 + 2] = ((lane % 3) - 1) * d * 0.3 + (random() - 0.5) * d * 0.06
   }
   return out
 }
@@ -45,6 +45,26 @@ export function lattice(count: number, random: Random, size: Size3, cells = 4): 
       const jitter = (random() - 0.5) * step[a]! * 0.04
       out[i * 3 + a] = clamp(base + offset + jitter, size[a]! / 2)
     }
+  }
+  return out
+}
+
+/**
+ * A dense core: a luminous shell with a sparser interior. The subject at rest.
+ */
+export function coreSphere(count: number, random: Random, size: Size3): Float32Array {
+  const radius = Math.min(...size) / 2
+  const out = new Float32Array(count * 3)
+  const golden = Math.PI * (3 - Math.sqrt(5))
+  for (let i = 0; i < count; i++) {
+    const shell = random() < 0.7
+    const r = radius * (shell ? 0.92 + random() * 0.08 : Math.cbrt(random()) * 0.85)
+    const y = 1 - (2 * (i + 0.5)) / count
+    const ring = Math.sqrt(Math.max(0, 1 - y * y))
+    const a = golden * i + random() * 0.15
+    out[i * 3] = Math.cos(a) * ring * r
+    out[i * 3 + 1] = y * r
+    out[i * 3 + 2] = Math.sin(a) * ring * r
   }
   return out
 }

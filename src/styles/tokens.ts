@@ -75,15 +75,14 @@ function declarations(colors: ThemeColors): string {
 }
 
 /**
- * Light by default, dark when the system asks for it, and a manual override
- * through `data-theme` on <html> in both directions.
+ * Dark by default for everyone — the site's identity. Light is a manual choice
+ * through `data-theme="light"` on <html>, remembered on the device.
  */
 export function themeCss(): string {
   const light = declarations(themes.light)
   const dark = declarations(themes.dark)
   return [
-    `:root{color-scheme:light;${light}}`,
-    `@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;${dark}}}`,
-    `:root[data-theme="dark"]{color-scheme:dark;${dark}}`,
+    `:root{color-scheme:dark;${dark}}`,
+    `:root[data-theme="light"]{color-scheme:light;${light}}`,
   ].join('')
 }

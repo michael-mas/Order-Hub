@@ -1,19 +1,19 @@
 /**
- * Layout of the home-page scenography: an ordered flow on the left, a computed
- * structure on the right, a floor and a backdrop. Geometry is procedural; this
- * file only places volumes.
+ * Layout of the home-page scenography: one subject that changes shape with the
+ * scroll (core → flow → structure), a floor and a backdrop. Geometry is
+ * procedural; this file only places volumes.
  */
 import { deg } from '../math/angles'
 import { layoutSchema } from './schema'
 
 export const HERO_LAYOUT = layoutSchema.parse({
   id: 'hero',
-  floorY: -1.8,
+  floorY: -2.6,
   camera: {
     direction: [0, 0.18, 1],
     target: [0, 0, 0],
     fovDegrees: 40,
-    fitRadius: 3.2,
+    fitRadius: 2.4,
     near: 0.1,
     far: 60,
     shiftLandscape: [0.24, 0],
@@ -22,30 +22,20 @@ export const HERO_LAYOUT = layoutSchema.parse({
   },
   entries: [
     {
-      name: 'flow',
-      position: [-1.45, 0, 0],
-      rotation: [0, deg(-12), 0],
+      name: 'subject',
+      position: [0, 0, 0],
+      rotation: [deg(-10), deg(24), 0],
       scale: 1,
-      size: [2, 2.2, 1.6],
+      size: [2.6, 2.6, 2.6],
       scaleRange: [0.5, 2],
       mustBeInFrame: true,
       grounded: false,
       solid: true,
-    },
-    {
-      name: 'structure',
-      position: [1.45, 0, 0],
-      rotation: [deg(8), deg(24), 0],
-      scale: 1,
-      size: [1.6, 1.6, 1.6],
-      scaleRange: [0.5, 2],
-      mustBeInFrame: true,
-      grounded: false,
-      solid: true,
+      rotates: true,
     },
     {
       name: 'floor',
-      position: [0, -1.8, 0],
+      position: [0, -2.6, 0],
       rotation: [0, 0, 0],
       scale: 1,
       size: [14, 0, 8],
@@ -53,10 +43,11 @@ export const HERO_LAYOUT = layoutSchema.parse({
       mustBeInFrame: false,
       grounded: true,
       solid: true,
+      rotates: false,
     },
     {
       name: 'backdrop',
-      position: [0, 1.2, -5],
+      position: [0, 1.2, -6],
       rotation: [0, 0, 0],
       scale: 1,
       size: [18, 10, 0],
@@ -64,6 +55,7 @@ export const HERO_LAYOUT = layoutSchema.parse({
       mustBeInFrame: false,
       grounded: false,
       solid: false,
+      rotates: false,
     },
   ],
 })

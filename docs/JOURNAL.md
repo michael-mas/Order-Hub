@@ -5,6 +5,29 @@
 
 ## 2026-09-25
 
+- **Retour de Michael sur la version en ligne : « naze comparé à l'ancien »**
+  — il manque tout (ambiance sombre, 3D qui en impose, mouvement,
+  personnalité), mais en plus dosé que l'ancien. Diagnostic assumé : j'avais
+  appliqué les règles du brief trop prudemment, et je n'avais pas respecté le
+  « sombre par défaut » de la DA. Refonte :
+  - **sombre par défaut pour tous**, clair sur choix manuel ;
+  - **un seul sujet 3D** (60 000 points au palier haut) qui se transforme au
+    scroll : noyau (accroche) → flux (cas e‑commerce) → treillis
+    (System://Alive) → dispersion (seuil de l'expérience) → noyau calme ;
+    rotation lente, inclinaison vers le pointeur (souris uniquement), halo
+    additif sur fond sombre ; toujours 0 octet envoyé au GPU par frame ;
+  - **mouvement DOM** : titres de section révélés une fois (jamais cachés sans
+    JS ni sous mouvement réduit), curseur de terminal après le statut ;
+  - **scanlines** sur la couche de scène uniquement.
+  Outillage : les objets qui tournent sont vérifiés par leur **sphère
+  englobante** (cadre et bande de texte), les formes sont générées dans un
+  budget qui garantit que la dispersion maximale reste dans cette sphère
+  (testé). Les tests spatiaux ont attrapé deux dépassements pendant la
+  refonte. Mesure LCP corrigée : relevée avant le premier scroll (un scroll
+  programmé n'est pas une interaction). `?governor=off` pour les captures
+  (le rendu logiciel headless ferait couper la scène par le gouverneur).
+  Compétences ramenées dans la colonne de lecture.
+  Relevé local non bridé : LCP 72-224 ms (texte), CLS 0, 0 erreur.
 - **Formulaire de contact** — choix de Michael : « le formulaire original ».
   Même relais que l'ancien site (FormSubmit), mais : destination = adresse
   validée (plus `michaelmas77@…`), appel par une route serveur

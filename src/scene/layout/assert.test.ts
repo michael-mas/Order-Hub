@@ -21,6 +21,7 @@ function entry(overrides: Partial<LayoutEntry> & Pick<LayoutEntry, 'name'>): Lay
     mustBeInFrame: true,
     grounded: false,
     solid: true,
+    rotates: false,
     ...overrides,
   }
 }
@@ -49,6 +50,11 @@ describe('worldBox', () => {
     const box = worldBox(entry({ name: 'bar', size: [2, 0.2, 0.2], rotation: [0, 0, deg(90)] }))
     expect(box.max.y - box.min.y).toBeCloseTo(2, 6)
     expect(box.max.x - box.min.x).toBeCloseTo(0.2, 6)
+  })
+
+  it('covers every rotation of a rotating entry', () => {
+    const box = worldBox(entry({ name: 'spinner', size: [2, 2, 2], rotates: true }))
+    expect(box.max.x).toBeCloseTo(Math.sqrt(3), 6)
   })
 
   it('accounts for scale', () => {

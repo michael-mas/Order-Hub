@@ -13,7 +13,7 @@ const VIEWPORTS = [
   { name: '2560', width: 2560, height: 1440, isMobile: false },
 ]
 const STOPS = 8
-const PATH = process.env.CAPTURE_PATH ?? '/'
+const PATH = process.env.CAPTURE_PATH ?? '/?governor=off'
 const outDir = `captures/page/${timestamp()}`
 
 // Installed before any page script: collects vitals into window.__vitals.
@@ -55,20 +55,35 @@ const report = await withServer({ mode: 'start', port: 3300 }, async (base) => {
     await page.addInitScript(vitalsProbe)
     await page.goto(base + PATH, { waitUntil: 'networkidle' })
 
+    // LCP is final at the first user input. Programmatic scrolling is not input,
+    // so read it before scrolling — otherwise late-revealed headings get counted.
+    await page.waitForTimeout(1000)
+    const lcpBeforeScroll = await page.evaluate(() => ({
+      lcp: window.__vitals.lcp,
+      el: window.__vitals.lcpElement,
+    }))
     const scrollMax = await page.evaluate(
       () => document.documentElement.scrollHeight - window.innerHeight,
     )
     for (let i = 0; i < STOPS; i++) {
       const y = Math.round((scrollMax * i) / (STOPS - 1))
       await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y)
-      await page.waitForTimeout(250)
+      await page.waitForTimeout(1200)
       await page.screenshot({ path: `${outDir}/${vp.name}-${i}.png` })
     }
     const vitals = await page.evaluate(() => window.__vitals)
     const horizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,
     )
-    results.push({ viewport: vp.name, scrollMax, horizontalOverflow, errors, ...vitals })
+    results.push({
+      viewport: vp.name,
+      scrollMax,
+      horizontalOverflow,
+      errors,
+      ...vitals,
+      lcp: lcpBeforeScroll.lcp,
+      lcpElement: lcpBeforeScroll.el,
+    })
     await context.close()
   }
   await browser.close()

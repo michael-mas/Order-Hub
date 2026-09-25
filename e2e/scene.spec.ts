@@ -16,7 +16,7 @@ test('the scene mounts after the text, and the canvas is never the LCP element',
   await expect(page.locator('html')).toHaveAttribute('data-scene', /low|medium|high/, {
     timeout: 15_000,
   })
-  await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(1)
+  await expect(page.locator('.scene-layer canvas')).toHaveCount(1)
   const lcp = await page.evaluate(() => (window as unknown as { __lcp: string }).__lcp)
   expect(lcp).not.toBe('canvas')
 })

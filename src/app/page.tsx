@@ -1,4 +1,5 @@
 import { PersonJsonLd } from '@/components/PersonJsonLd'
+import { RevealObserver } from '@/components/RevealObserver'
 import { ScenePortal } from '@/components/ScenePortal'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
@@ -21,6 +22,7 @@ export default function HomePage() {
         Aller au contenu
       </a>
       <PersonJsonLd profile={profile} />
+      <RevealObserver />
       <ScenePortal />
       <SiteHeader name={profile.name} />
       <main>
