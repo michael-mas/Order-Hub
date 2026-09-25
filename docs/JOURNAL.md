@@ -5,6 +5,17 @@
 
 ## 2026-09-25
 
+- **Phase 5.2 — ossature et design system.** Tokens de couleur en TypeScript
+  (source unique, CSS généré, 22 tests de contraste WCAG AA sur les deux
+  thèmes) ; Inter + JetBrains Mono auto-hébergées (48 + 40 kB, OFL) ; thème
+  système + bascule mémorisée sans flash ; 8 sections + hero rendus serveur,
+  faits tirés de `profile.ts` (compétences colonne ①, parcours, contacts) ;
+  textes non rédigés en marqueurs visibles `⟨À RÉDIGER⟩`. Relevé local non
+  bridé : LCP 72-260 ms, CLS 0, 0 erreur, 0 débordement sur les 5 viewports.
+  E2E : ordre des sections, marqueurs visibles, e-mail en clair, bascule de
+  thème persistée, pas de débordement à 360 px, focus visible au clavier.
+  Choix pris sans question : sections en français seulement pour l'instant
+  (l'anglais viendra avec le contenu rédigé) ; titres des cas provisoires.
 - **Phase 3 — suite de l'outillage.** `src/scene/device` (sonde de capacités,
   paliers `off`/`low`/`medium`/`high` avec budgets DPR, pixels, FPS, particules ;
   gouverneur sur médiane de 120 frames, rétrograde, ne remonte jamais) ;

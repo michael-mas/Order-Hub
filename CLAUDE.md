@@ -78,6 +78,12 @@ src/scene/scroll/       store de progression hors React (document + sections)
 src/scene/interaction/  picking sur liste explicite, 1 rayon max par frame
 src/scene/engine/       boucle unique : dt borné, cap FPS, pause cachée/hors écran
 scripts/                capture-scene.mjs, capture-page.mjs, server.mjs
+src/styles/tokens.ts    couleurs des deux thèmes (source unique) → CSS généré ;
+                        contrastes WCAG AA testés (tokens.test.ts)
+src/app/globals.css     échelle typo, espacements, mapping Tailwind @theme
+src/app/fonts/          Inter + JetBrains Mono variables, woff2 latin, OFL
+src/components/         Section, Pending (marqueurs visibles), en-tête, pied
+src/components/sections 8 sections + hero ; aucun fait en dur, tout vient de profile.ts
 src/app/                App Router ; contenu rendu serveur
 e2e/                    tests Playwright
 ```
@@ -123,7 +129,19 @@ Documents d'analyse de référence : dépôt source, branche
    `scripts/server.mjs`) ; attendre `body[data-scene-ready]` en `state:
 'attached'` (le body a une hauteur nulle).
 
-## 8. Pièges connus — ne pas les redécouvrir
+## 8. Design system
+
+- Registre « instrumentation » (pas cyberpunk) : un seul accent vert, gris
+  pour la hiérarchie, mono capitales interlettrées pour les métadonnées.
+- Couleurs : uniquement via les tokens (`bg-bg`, `text-text-muted`,
+  `bg-accent`…). Ajouter un couple texte/fond = l'ajouter au test de contraste.
+- Thème : système par défaut, bascule manuelle mémorisée (`data-theme` sur
+  `<html>`, script d'amorçage sans flash dans `layout.tsx`).
+- Marqueurs : `<Pending>` rend `⟨À CONFIRMER⟩` / `⟨À RÉDIGER⟩` visibles
+  (`data-pending`). Zéro marqueur avant publication.
+- `:focus-visible` global, `prefers-reduced-motion` coupe les animations.
+
+## 9. Pièges connus — ne pas les redécouvrir
 
 - **Lerp écrit à la main interdit.** `lerp(a, b, dt * k)` extrapole dès que
   `dt * k > 1` (bug historique `CatmullRomCurve3.getPoint`). Utiliser
@@ -136,11 +154,14 @@ Documents d'analyse de référence : dépôt source, branche
 - **Rotations en radians**, via `deg()` — les littéraux de rotation bruts sont
   interdits par lint, comme les appels `lerp` sans `dampFactor`.
 - TypeScript 7 : incompatible avec typescript-eslint (< 6.1) à ce jour.
+- Captures pendant un scroll animé (`scroll-behavior: smooth`) : l'en-tête
+  sticky paraît décalé. Attendre la fin du scroll, ou scroller en `instant`
+  comme `capture-page.mjs`.
 - Ancien dépôt : `ParticleField` recalculait 60 000 particules sur le CPU à
   chaque frame ; le mobile ouvrait trois contextes WebGL ; la fonte Bulzing
   est sous licence non commerciale. Rien de cela ne revient.
 
-## 9. Où on en est
+## 10. Où on en est
 
 Voir la dernière entrée de `docs/JOURNAL.md`. Ordre de construction : outillage
 (captures déterministes, tests d'assertion spatiale) → ossature + design
