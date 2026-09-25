@@ -5,6 +5,9 @@
 
 ## 2026-09-25
 
+- **Manuel d'exploitation `CLAUDE.md`** créé à la racine. Michael a choisi de
+  garder ce nom (exception explicite à la règle « aucune mention d'outil »),
+  pour que les sessions suivantes démarrent seules.
 - **Phase 3 — socle du dépôt.** Next.js 16.3, React 19.3, TypeScript 5.9
   strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), Tailwind 4,
   ESLint (config Next, zéro avertissement toléré), Prettier, Vitest, Playwright
