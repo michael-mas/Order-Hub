@@ -5,6 +5,21 @@
 
 ## 2026-09-25
 
+- **Vérification des faits System://Alive dans l'historique git du dépôt
+  source** (historique complet récupéré, 155 commits) :
+  - premier commit 2024-12-06 ; `main` s'arrête au 2026-07-07 (`72e67b6`) ;
+    35 commits plus récents vivent sur `feat/sprint2-quickwins` et voisines,
+    **non fusionnés** ;
+  - TypeScript/TSX dans `src/` : 182 fichiers et 49 186 lignes sur `main`,
+    50 971 lignes sur `feat/sprint2-quickwins` (l'analyse disait « ~53 000 ») ;
+  - poids de `public/` : **611 Mo sur `main`**, 269 Mo sur les branches
+    récentes (l'analyse disait « 580 → 265 Mo ») ;
+  - **sur `main`, WebGPU est servi par défaut** dès que `navigator.gpu` existe ;
+    la mise derrière `?webgpu` n'existe que sur les branches non fusionnées.
+    L'affirmation « aucun visiteur ne l'a jamais reçu » dépend donc de la
+    branche déployée — impossible à vérifier d'ici (réseau bloqué vers
+    `vercel.app`). Question posée à Michael.
+  Aucun de ces chiffres n'est encore publié.
 - **Cas B validé**, sans pourcentage (demande de Michael : « j'aime vraiment
   pas les pourcentages pour prouver »). Résultat reformulé en mots ; 12 % →
   0,1 % gardé pour l'oral. Test : aucun `%` dans `profile.ts`.
