@@ -72,6 +72,11 @@ src/scene/math/         deg() (seule écriture d'angle) ; createRandom(seed)
 src/scene/layout/       layouts en données (zod) + assertions spatiales
                         (collisions, cadre, sol, échelle) testées sans GPU
 src/scene/debug/        caméras fixes, scène d'inspection, /dev/scene
+src/scene/device/       capacités (estimation), 4 paliers off/low/medium/high,
+                        gouverneur qui rétrograde sur temps de frame mesurés
+src/scene/scroll/       store de progression hors React (document + sections)
+src/scene/interaction/  picking sur liste explicite, 1 rayon max par frame
+src/scene/engine/       boucle unique : dt borné, cap FPS, pause cachée/hors écran
 scripts/                capture-scene.mjs, capture-page.mjs, server.mjs
 src/app/                App Router ; contenu rendu serveur
 e2e/                    tests Playwright
@@ -91,8 +96,14 @@ Documents d'analyse de référence : dépôt source, branche
   On lisse la valeur côté consommateur, jamais le scroll.
 - **Une seule expérience responsive** de 360 à 2560 px.
 - Le canvas se met en **pause** hors viewport et onglet caché.
-- **WebGL2 par défaut.** WebGPU seulement en opt-in mesuré, après présentation
-  à Michael du coût de bundle. Jamais de chemin à moitié porté servi.
+- **WebGL2 seul pour l'instant.** Coût mesuré du double chemin : `docs/WEBGPU.md`
+  (+106 % de Three en gzip avant tree-shaking). WebGPU seulement en opt-in, sur
+  besoin réel, après arbitrage de Michael. Jamais de chemin à moitié porté servi.
+- **Pas de physique.** La scénographie est déterministe (fonction du scroll) :
+  une physique y serait une contradiction et un coût. À rouvrir seulement si un
+  besoin précis apparaît, avec les règles du brief (§ 7.4).
+- **Paliers** : jamais la largeur de viewport pour juger la puissance ;
+  `(pointer: coarse)` plafonne à `low` ; le gouverneur ne remonte jamais.
 - Budget : build total ≤ 10 Mo ; géométrie procédurale (0 octet) ; aucun
   fichier > ~400 lignes sans justification écrite.
 

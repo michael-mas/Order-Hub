@@ -5,6 +5,16 @@
 
 ## 2026-09-25
 
+- **Phase 3 — suite de l'outillage.** `src/scene/device` (sonde de capacités,
+  paliers `off`/`low`/`medium`/`high` avec budgets DPR, pixels, FPS, particules ;
+  gouverneur sur médiane de 120 frames, rétrograde, ne remonte jamais) ;
+  `src/scene/scroll` (progression document et sections, abonnés notifiés au seul
+  changement de section) ; `src/scene/interaction` (picking sur cibles
+  explicites, un rayon au plus par frame, journal optionnel) ;
+  `src/scene/engine/loop.ts` (RAF unique, dt borné, cap FPS, pause onglet caché
+  et hors écran, reprise sans saut). 59 tests unitaires.
+  **Décisions** : WebGL2 seul (dossier chiffré `docs/WEBGPU.md`) ; pas de
+  physique (scénographie déterministe).
 - **Phase 3 — outillage 3D, avant tout objet.** Layouts déclarés en données
   (zod) ; assertions spatiales pures (collisions nommées par paire, cadrage à 6
   ratios de 360×800 à 2560×1080, sol, bornes d'échelle) testées sans GPU, avec
