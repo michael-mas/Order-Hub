@@ -5,6 +5,18 @@
 
 ## 2026-09-25
 
+- **Formulaire de contact** — choix de Michael : « le formulaire original ».
+  Même relais que l'ancien site (FormSubmit), mais : destination = adresse
+  validée (plus `michaelmas77@…`), appel par une route serveur
+  (`/api/contact`) pour ne pas exposer l'adresse côté client, validation zod,
+  pot de miel anti-robot, délai de 8 s, états de succès et d'échec visibles
+  (l'échec donne l'adresse en clair). Tests : 5 unitaires (relais, entrée
+  invalide, robot, refus du relais, panne réseau), 3 e2e.
+  **Envoi réel NON testé** : formsubmit.co est injoignable depuis
+  l'environnement de travail. Procédure pour Michael après déploiement :
+  premier envoi → FormSubmit envoie un e‑mail d'activation → activer →
+  renvoyer un message → vérifier la réception (et les indésirables).
+  Option : mettre l'alias FormSubmit dans `CONTACT_FORMSUBMIT_ID`.
 - **Phase 5.5 — SEO, partage, CV.** Métadonnées (titre, description =
   accroche, canonique, Open Graph `profile`, carte Twitter) ; image de
   partage générée au build depuis `profile.ts` ; `robots.txt` (exclut

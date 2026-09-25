@@ -92,6 +92,7 @@ src/content/cv/         CV PDF (@react-pdf) dérivé de profile.ts → /cv-micha
 src/app/opengraph-image.tsx, robots.ts, sitemap.ts   SEO et partage
 assets/fonts/           Inter woff (serveur : OG + PDF ; woff2 non supporté par eux)
 src/lib/site.ts         SITE_URL (variable d'environnement, domaine à choisir)
+src/lib/contact.ts      validation + relais FormSubmit (CONTACT_FORMSUBMIT_ID) ; route /api/contact
 src/app/                App Router ; contenu rendu serveur
 e2e/                    tests Playwright
 ```
@@ -184,7 +185,14 @@ Documents d'analyse de référence : dépôt source, branche
   chaque frame ; le mobile ouvrait trois contextes WebGL ; la fonte Bulzing
   est sous licence non commerciale. Rien de cela ne revient.
 
-## 11. Où on en est
+## 11. Variables d'environnement (déploiement)
+
+| Variable                | Rôle                                                      | Défaut                   |
+| ----------------------- | --------------------------------------------------------- | ------------------------ |
+| `SITE_URL`              | origine canonique (métadonnées, sitemap)                  | `http://localhost:3000`  |
+| `CONTACT_FORMSUBMIT_ID` | alias FormSubmit, pour ne pas mettre l'adresse dans l'URL | l'e‑mail de `profile.ts` |
+
+## 12. Où on en est
 
 Voir la dernière entrée de `docs/JOURNAL.md`. Ordre de construction : outillage
 (captures déterministes, tests d'assertion spatiale) → ossature + design

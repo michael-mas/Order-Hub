@@ -334,7 +334,7 @@ serveur marchand).
 
 | Canal | Valeur | Statut |
 |---|---|---|
-| E-mail affiché | `masmichael280699@gmail.com` (choix de Michael, « pour l'instant ») | ⟨À CONFIRMER : test d'envoi réel de bout en bout, via le formulaire du site une fois en place⟩ |
+| E-mail affiché | `masmichael280699@gmail.com` (choix de Michael, « pour l'instant ») | Formulaire en place (relais FormSubmit, repris de l'ancien site, destination changée). ⟨À CONFIRMER : test d'envoi réel de bout en bout, après déploiement et activation FormSubmit⟩ |
 | LinkedIn | https://www.linkedin.com/in/michaelmasdev | ✅ fourni par Michael — ⟨À CONFIRMER : séparer les deux intitulés Lengow sur le profil avant mise en ligne⟩ |
 | GitHub | https://github.com/michael-mas | ✅ fourni par Michael |
 

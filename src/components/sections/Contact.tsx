@@ -1,6 +1,6 @@
 import type { Profile } from '@/content/profile'
 import { CopyEmail } from '../CopyEmail'
-import { Pending } from '../Pending'
+import { ContactForm } from '../ContactForm'
 import { Section } from '../Section'
 
 export function Contact({ profile }: { profile: Profile }) {
@@ -24,11 +24,7 @@ export function Contact({ profile }: { profile: Profile }) {
             <a href={profile.links.github}>GitHub</a>
           </li>
         </ul>
-        <p>
-          <Pending kind="write">
-            formulaire (nom, e-mail, message) + test d&apos;envoi réel de bout en bout
-          </Pending>
-        </p>
+        <ContactForm email={profile.email} />
       </div>
     </Section>
   )
