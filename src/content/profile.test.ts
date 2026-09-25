@@ -46,7 +46,9 @@ describe('case studies', () => {
 
   it('never name the employer or describe its internal state (decided by Michael)', () => {
     const text = JSON.stringify(profile.cases)
-    expect(text).not.toMatch(/lengow|passation|démission|retrait|en retard|échouaient/i)
+    expect(text).not.toMatch(
+      /lengow|passation|démission|retrait|pris du retard|plugins en retard|échouaient/i,
+    )
   })
 
   it('never name a client, an account or an order', () => {

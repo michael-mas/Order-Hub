@@ -61,9 +61,12 @@ export function CaseStudy({
           )}
         </Block>
         <Block title="Le résultat">{text(study?.result, 'le résultat')}</Block>
-        <Block title="Ce que je ferais autrement">
-          {text(study?.differently, 'ce que je ferais autrement')}
-        </Block>
+        {/* A written case without this line omits the block: removed, never filled. */}
+        {(!study || study.differently) && (
+          <Block title="Ce que je ferais autrement">
+            {text(study?.differently, 'ce que je ferais autrement')}
+          </Block>
+        )}
         {proofExpected && <Block title="Preuve">{text(study?.proof, 'preuve')}</Block>}
       </dl>
     </Section>

@@ -5,6 +5,14 @@
 
 ## 2026-09-25
 
+- **Cas A validé par Michael** (sans ligne « ce que je ferais autrement » :
+  bloc omis pour les cas rédigés, jamais rempli). **Cas B rédigé** (import des
+  commandes sans API de notification), même neutralité : employeur non
+  nommé, problème décrit comme un mécanisme sans attribution de faute, un seul
+  chiffre (~12 % → 0,1 %, source Datadog + SQL) ; les cadences et le gain de
+  parallélisation (~20 %) restent hors page, pour l'entretien. Migration
+  headless écrite « en cours ». Liste de mots interdits resserrée : « en
+  retard » décrit ici le mécanisme corrigé. **En attente de validation.**
 - **Cas A réécrit en ton neutre** à la demande de Michael : employeur non
   nommé, plus de « sans passation », plus d'état du produit, épisode Shopify
   devenu « mise en conformité exigée par l'éditeur d'une plateforme ». Récit

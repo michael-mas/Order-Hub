@@ -198,6 +198,41 @@ export const profile = profileSchema.parse({
       differently: null,
       proof: null,
     },
+    {
+      id: 'cas-commandes',
+      title: 'Importer les commandes à temps, sans API de notification',
+      context:
+        'Un service en PHP/Symfony centralise la récupération des commandes et du catalogue pour l’ensemble des connecteurs. L’architecture a été choisie en équipe ; j’en ai écrit la parallélisation, la gestion des quotas, la migration des commandes, les connecteurs et les écrans de configuration.',
+      problem:
+        'Une grande fenêtre d’import, relancée régulièrement, pouvait dépasser le temps imparti chez les marchands les plus actifs. Les imports finissaient par se chevaucher, et une part des commandes arrivait en retard ou n’était pas mise à jour.',
+      constraint:
+        'Les marketplaces imposent leurs API : aucune notification quand une commande arrive, et des quotas d’appels qui varient selon le forfait de chaque marchand.',
+      decisions: [
+        {
+          choice:
+            'Se rapprocher au plus près d’un fonctionnement événementiel : une fenêtre d’import courte et fréquente pour la réactivité, plus un rattrapage quotidien sur plusieurs jours pour ne rien laisser passer.',
+          rejected: 'Des notifications en temps réel par webhooks.',
+          why: 'Les API des marketplaces ne les proposent pas.',
+        },
+        {
+          choice:
+            'Paralléliser le téléchargement du catalogue, en réglant le nombre d’appels sur le quota d’API propre au forfait de chaque marchand.',
+          rejected: 'Un même nombre d’appels pour tous les marchands.',
+          why: 'Chaque forfait a son propre quota.',
+        },
+        {
+          choice:
+            'Déplacer la logique d’un plugin lourd, installé chez chaque marchand, vers une intégration headless centralisée dans ce service — migration en cours.',
+          rejected: 'Continuer à faire évoluer la logique dans le plugin.',
+          why: 'Le code installé chez le marchand échappe aux logs et se débogue à l’aveugle.',
+        },
+      ],
+      result:
+        'La part de commandes importées en retard ou non mises à jour est passée d’environ 12 % à 0,1 %, mesurée dans Datadog et en SQL. Avec des logs désormais conservés, un problème signalé le matin se diagnostique dans la journée.',
+      differently:
+        'J’aurais pris plus de temps au départ pour coller au plus près de l’architecture propre visée ; l’écart se résorbe depuis.',
+      proof: null,
+    },
   ],
 } satisfies Profile)
 

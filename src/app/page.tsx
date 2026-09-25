@@ -39,6 +39,7 @@ export default function HomePage() {
             id="cas-commandes"
             index={3}
             label="Étude de cas · production"
+            study={profile.cases.find((c) => c.id === 'cas-commandes')}
             fallbackTitle="Centraliser l'import des commandes"
             act="flow"
             source="PARCOURS.md § 4, cas B"
