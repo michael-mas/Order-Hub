@@ -5,6 +5,9 @@
 
 ## 2026-09-25
 
+- **Cas B validé**, sans pourcentage (demande de Michael : « j'aime vraiment
+  pas les pourcentages pour prouver »). Résultat reformulé en mots ; 12 % →
+  0,1 % gardé pour l'oral. Test : aucun `%` dans `profile.ts`.
 - **Cas A validé par Michael** (sans ligne « ce que je ferais autrement » :
   bloc omis pour les cas rédigés, jamais rempli). **Cas B rédigé** (import des
   commandes sans API de notification), même neutralité : employeur non

@@ -311,6 +311,9 @@ dans le parcours, où c'est un fait public.
 Michael ne veut pas d'un site qui « affiche des stats ». Règle retenue :
 
 - **Aucune tuile de chiffres, aucun compteur, aucun tableau de KPI.**
+- **Aucun pourcentage** (décision du 2026-09-25, après le cas B) : le résultat
+  se dit en mots — « ont quasiment disparu » — et le chiffre se garde pour
+  l'oral.
 - Un chiffre n'apparaît **que dans une phrase de récit**, là où il explique une
   décision — au plus un par étude de cas.
 - Les chiffres internes de l'équipe (nombre de tickets, comparaisons avec des

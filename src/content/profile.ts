@@ -228,7 +228,7 @@ export const profile = profileSchema.parse({
         },
       ],
       result:
-        'La part de commandes importées en retard ou non mises à jour est passée d’environ 12 % à 0,1 %, mesurée dans Datadog et en SQL. Avec des logs désormais conservés, un problème signalé le matin se diagnostique dans la journée.',
+        'Les commandes importées en retard ou non mises à jour ont quasiment disparu, ce que confirment Datadog et une requête SQL de contrôle. Avec des logs désormais conservés, un problème signalé le matin se diagnostique dans la journée.',
       differently:
         'J’aurais pris plus de temps au départ pour coller au plus près de l’architecture propre visée ; l’écart se résorbe depuis.',
       proof: null,

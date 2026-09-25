@@ -62,6 +62,10 @@ describe('case studies', () => {
     expect(countNumbers('de 12 % à 0,1 %, et 398 tickets')).toBe(3)
   })
 
+  it('never use a percentage as proof (decided by Michael)', () => {
+    expect(JSON.stringify(profile)).not.toMatch(/%/)
+  })
+
   it('carry at most one figure each, in a sentence (decided by Michael)', () => {
     for (const c of profile.cases) {
       const numbers = countNumbers(JSON.stringify({ ...c, id: '', title: '' }))

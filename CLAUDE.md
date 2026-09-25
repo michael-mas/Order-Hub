@@ -22,8 +22,8 @@ déployée à part et sera liée comme projet phare. On ne la migre pas.
    Michael) → `src/content/profile.ts`. Nulle part ailleurs. Aucun fait repris
    de l'ancien dépôt (son parcours est faux). Un fait manquant s'écrit
    `⟨À CONFIRMER : question⟩`, visible à l'écran ; on ne comble jamais.
-2. **Règles de publication fixées par Michael** : pas de tuiles de chiffres (au
-   plus un chiffre par étude de cas, dans une phrase) ; pas de dates de projet ;
+2. **Règles de publication fixées par Michael** : pas de tuiles de chiffres ni de
+   pourcentages (au plus une durée par étude de cas, dans une phrase) ; pas de dates de projet ;
    rien de négatif sur lui ; distance avec l'employeur (pas de bloc « Preuve », pas de mention de son code, employeur jamais nommé ni décrit dans les études de cas, ton neutre, jamais de plainte) ; rien sur l'AFPA au-delà de « bloc front-end
    validé » ; aucun intitulé jamais occupé (« lead », « senior ») ; pas de
    « freelance ». Un test (`profile.test.ts`) garde une partie de ces règles.
