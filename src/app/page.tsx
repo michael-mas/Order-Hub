@@ -49,9 +49,10 @@ export default function HomePage() {
             id="cas-system-alive"
             index={4}
             label="Étude de cas · rendu temps réel"
+            study={profile.cases.find((c) => c.id === 'cas-system-alive')}
             fallbackTitle="System://Alive"
             act="structure"
-            source="chiffres à revérifier dans l'historique git du dépôt source"
+            source="le dépôt de l'expérience est privé aujourd'hui : le rendre public, ou ne lier que l'expérience ?"
             proofExpected
           />
         </div>

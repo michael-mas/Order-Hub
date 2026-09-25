@@ -5,6 +5,17 @@
 
 ## 2026-09-25
 
+- **Déploiement confirmé par Michael** : `feat/sprint2-quickwins` est en
+  production → WebGL servi par défaut, WebGPU derrière `?webgpu` : la décision
+  n° 4 du cas est vraie pour le site en ligne.
+- **Cas System://Alive rédigé** à partir des seuls faits vérifiés dans le code
+  de la branche déployée (course `setIndexBuffer` et géométrie 1×1, matériaux
+  TSL en `useEffect`, garde de taille de canvas, `?webgpu`, bugs dépendants du
+  framerate). **Écartés faute de preuve** : « dépendances CDN supprimées »
+  (un composant charge encore Draco depuis gstatic) et « code public » (le
+  dépôt est privé). Aucun chiffre, aucune date. Ligne compétences « Code
+  public » corrigée. Règle d'espace insécable affinée (`?webgpu` n'est pas une
+  ponctuation). **En attente de validation.**
 - **Vérification des faits System://Alive dans l'historique git du dépôt
   source** (historique complet récupéré, 155 commits) :
   - premier commit 2024-12-06 ; `main` s'arrête au 2026-07-07 (`72e67b6`) ;

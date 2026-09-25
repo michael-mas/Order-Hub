@@ -155,7 +155,7 @@ export const profile = profileSchema.parse({
       name: 'Three.js · WebGL2 · GLSL',
       group: 'rendering',
       usage: 'Scénographie de ce site et expérience 3D System://Alive, shaders écrits à la main.',
-      proof: 'Code public',
+      proof: 'Ce site et l’expérience en ligne',
     },
   ],
   cases: [
@@ -231,6 +231,46 @@ export const profile = profileSchema.parse({
         'Les commandes importées en retard ou non mises à jour ont quasiment disparu, ce que confirment Datadog et une requête SQL de contrôle. Avec des logs désormais conservés, un problème signalé le matin se diagnostique dans la journée.',
       differently:
         'J’aurais pris plus de temps au départ pour coller au plus près de l’architecture propre visée ; l’écart se résorbe depuis.',
+      proof: null,
+    },
+    {
+      id: 'cas-system-alive',
+      title: 'System://Alive — deux chemins de rendu, et celui que j’ai choisi de ne pas servir',
+      context:
+        'Un portfolio 3D construit seul : une expérience desktop en React Three Fiber, une expérience mobile en Three.js, des shaders écrits à la main. C’est le projet où je décide de tout, du rendu au déploiement.',
+      problem:
+        'Je voulais un vrai chemin WebGPU, avec des matériaux en TSL. Deux crashs sont apparus : des matériaux créés pendant le rendu React entraient en concurrence avec l’envoi des buffers de la première frame (setIndexBuffer), et une géométrie recréée à chaque changement de texte provoquait la même erreur en cours de frame. Sur les écrans ultra-larges à haute densité, le canvas dépassait aussi la taille de texture maximale du GPU.',
+      constraint:
+        'La direction artistique existait déjà en GLSL et fonctionnait : la porter en TSL, c’était réécrire un rendu validé. Et un portfolio n’a pas de version suivante : un crash chez un recruteur ne se rattrape pas.',
+      decisions: [
+        {
+          choice:
+            'Construire les matériaux TSL après la première frame, dans un effet, avec un matériau simple en repli le temps d’une frame.',
+          rejected: 'Attendre un correctif dans Three.js.',
+          why: 'Le bug était intermittent, et le calendrier ne dépendait pas de moi.',
+        },
+        {
+          choice:
+            'Une géométrie unitaire, mise à l’échelle par la matrice du mesh, plutôt qu’une géométrie recréée aux dimensions du texte.',
+          rejected: 'Recréer la géométrie à chaque changement.',
+          why: 'Chaque recréation réalloue les buffers en cours de frame.',
+        },
+        {
+          choice:
+            'Calculer la densité de pixels à partir de la taille réelle de l’écran, pour que le canvas reste sous la limite du GPU.',
+          rejected: 'Un plafond de densité fixe.',
+          why: 'Il aurait dégradé tout le monde, ou continué à casser les écrans ultra-larges.',
+        },
+        {
+          choice: 'Servir WebGL à tous, et n’ouvrir WebGPU qu’avec le paramètre ?webgpu.',
+          rejected: 'Livrer WebGPU par défaut, plus impressionnant à raconter.',
+          why: 'Des portages restaient incomplets : un visiteur aurait pu tomber sur une zone vide ou un crash.',
+        },
+      ],
+      result:
+        'Les deux chemins fonctionnent ; les visiteurs reçoivent le chemin WebGL, et WebGPU reste ouvrable. Deux bugs dépendants du framerate m’ont laissé une règle que j’applique depuis : toute logique qui dépend de la durée d’une frame est un bug en attente d’une machine plus lente. Ce site en hérite directement, avec un lissage borné et testé.',
+      differently:
+        'Je partirais avec des tests et une intégration continue dès le premier jour — c’est ce que fait ce site.',
       proof: null,
     },
   ],

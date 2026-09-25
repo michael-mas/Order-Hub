@@ -33,7 +33,7 @@ describe('case studies', () => {
   const countNumbers = (text: string) => (text.match(figure) ?? []).length
 
   it('use a no-break space before French double punctuation', () => {
-    expect(JSON.stringify(profile)).not.toMatch(/ [:;?!]/)
+    expect(JSON.stringify(profile)).not.toMatch(/ [:;!]| \?(?![a-z])/)
   })
 
   it('keep a deliberate distance from the employer: no proof block, no "proprietary code" line', () => {
