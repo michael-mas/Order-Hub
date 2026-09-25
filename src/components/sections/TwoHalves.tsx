@@ -3,7 +3,7 @@ import { Section } from '../Section'
 
 export function TwoHalves({ halves }: { halves: Profile['halves'] }) {
   return (
-    <Section id="deux-moities" index={1} label="Profil" title="Deux moitiés" act="halves">
+    <Section id="profil" index={1} label="Profil" title="Ce que je fais" act="halves">
       <div className="grid gap-6 md:grid-cols-2">
         {halves.map((half) => (
           <article

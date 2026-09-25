@@ -5,6 +5,11 @@
 
 ## 2026-09-25
 
+- **Retour de Michael sur l'accroche** : trop interprétative. Règle : phrases
+  de présentation simples et descriptives. « Deux moitiés » → « Ce que je
+  fais » (ancre `#profil`) ; « La production / Le rendu temps réel » →
+  « Intégrations e‑commerce / 3D dans le navigateur » ; accroche sans « que
+  je ne contrôle pas » ni « carte graphique ».
 - **Accroche et « deux moitiés » rédigées** (`profile.tagline`,
   `profile.halves`) depuis la cible validée et `PARCOURS.md`, sans chiffre ni
   superlatif (« à l'échelle » de la formulation D retiré : pas de volume

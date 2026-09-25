@@ -92,12 +92,12 @@ export const profile = profileSchema.parse({
   name: 'Michael Mas',
   headline: 'Développeur full stack — PHP/Symfony et React/TypeScript, intégrations e‑commerce',
   tagline:
-    'Je fais tenir des intégrations e‑commerce sur des plateformes que je ne contrôle pas — catalogues, commandes, marketplaces. Et le projet que vous pouvez ouvrir en entier tourne sur votre carte graphique.',
+    'Je développe des intégrations e‑commerce — catalogues, commandes, marketplaces — et des expériences 3D dans le navigateur.',
   halves: [
     {
-      title: 'La production',
+      title: 'Intégrations e‑commerce',
       summary:
-        'Des intégrations qui relient les boutiques des marchands aux marketplaces : imports de commandes, exports catalogue, plugins.',
+        'Relier les boutiques des marchands aux marketplaces : catalogues, commandes, plugins.',
       facts: [
         'PHP/Symfony et React/TypeScript, en production',
         'PrestaShop, Magento, WooCommerce, Shopware, Shopify — et les API des marketplaces',
@@ -106,7 +106,7 @@ export const profile = profileSchema.parse({
       href: '#cas-plugins',
     },
     {
-      title: 'Le rendu temps réel',
+      title: '3D dans le navigateur',
       summary: 'Un portfolio 3D construit seul, et la scène de ce site.',
       facts: [
         'WebGL2 et shaders GLSL écrits à la main',

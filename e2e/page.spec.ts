@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const SECTIONS = [
-  'deux-moities',
+  'profil',
   'cas-plugins',
   'cas-commandes',
   'cas-system-alive',

@@ -24,7 +24,7 @@ déployée à part et sera liée comme projet phare. On ne la migre pas.
    `⟨À CONFIRMER : question⟩`, visible à l'écran ; on ne comble jamais.
 2. **Règles de publication fixées par Michael** : pas de tuiles de chiffres ni de
    pourcentages (au plus une durée par étude de cas, dans une phrase) ; pas de dates de projet ;
-   rien de négatif sur lui ; distance avec l'employeur (pas de bloc « Preuve », pas de mention de son code, employeur jamais nommé ni décrit dans les études de cas, ton neutre, jamais de plainte) ; rien sur l'AFPA au-delà de « bloc front-end
+   rien de négatif sur lui ; distance avec l'employeur (pas de bloc « Preuve », pas de mention de son code, employeur jamais nommé ni décrit dans les études de cas, ton neutre, jamais de plainte ; phrases de présentation simples et descriptives, sans formule) ; rien sur l'AFPA au-delà de « bloc front-end
    validé » ; aucun intitulé jamais occupé (« lead », « senior ») ; pas de
    « freelance ». Un test (`profile.test.ts`) garde une partie de ces règles.
 3. **Aucune donnée client identifiante** : on décrit le cas, pas le client
