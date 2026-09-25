@@ -5,6 +5,16 @@
 
 ## 2026-09-25
 
+- **Phase 5.4 — étude de cas A rédigée** (reprise du périmètre plugins sans
+  passation), depuis `PARCOURS.md` uniquement, en données typées dans
+  `profile.ts` (`cases`). Gabarit fixe : contexte, problème, contrainte,
+  4 décisions avec l'option écartée, résultat, preuve. Un seul chiffre (un
+  mois accordé, deux semaines) ; pas de date, pas de nom de client, rien sur
+  l'histoire interne de l'employeur, pas d'heures supplémentaires.
+  « Ce que je ferais autrement » : non fourni → marqueur visible.
+  Tests ajoutés : pas d'identifiant client, au plus une comparaison chiffrée
+  par cas (compteur lui-même testé), espace insécable avant `: ; ? !`.
+  **En attente de validation par Michael.**
 - **Phase 5.3 — scénographie branchée sur le scroll.** Deux nuages de points
   procéduraux (flux à gauche, treillis à droite), placés par `HERO_LAYOUT`,
   animés au vertex shader (0 octet envoyé au GPU par frame, 2 passes cœur +

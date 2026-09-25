@@ -29,15 +29,16 @@ export default function HomePage() {
             id="cas-plugins"
             index={2}
             label="Étude de cas · production"
-            title="Reprendre un périmètre plugins sans passation"
+            study={profile.cases.find((c) => c.id === 'cas-plugins')}
+            fallbackTitle="Reprendre un périmètre plugins sans passation"
             act="flow"
-            source="PARCOURS.md § 4, cas A"
+            source="réponse de Michael attendue"
           />
           <CaseStudy
             id="cas-commandes"
             index={3}
             label="Étude de cas · production"
-            title="Centraliser l'import des commandes"
+            fallbackTitle="Centraliser l'import des commandes"
             act="flow"
             source="PARCOURS.md § 4, cas B"
           />
@@ -45,7 +46,7 @@ export default function HomePage() {
             id="cas-system-alive"
             index={4}
             label="Étude de cas · rendu temps réel"
-            title="System://Alive"
+            fallbackTitle="System://Alive"
             act="structure"
             source="chiffres à revérifier dans l'historique git du dépôt source"
           />

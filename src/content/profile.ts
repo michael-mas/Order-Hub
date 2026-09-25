@@ -29,6 +29,25 @@ export const pathStepSchema = z.object({
   label: z.string().min(1),
 })
 
+export const decisionSchema = z.object({
+  choice: z.string().min(1),
+  rejected: z.string().min(1),
+  why: z.string().min(1),
+})
+
+/** Case study, fixed template. `null` means "not supplied yet" and renders a visible marker. */
+export const caseStudySchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  context: z.string().min(1).nullable(),
+  problem: z.string().min(1).nullable(),
+  constraint: z.string().min(1).nullable(),
+  decisions: z.array(decisionSchema).max(4),
+  result: z.string().min(1).nullable(),
+  differently: z.string().min(1).nullable(),
+  proof: z.string().min(1),
+})
+
 export const profileSchema = z.object({
   name: z.string().min(1),
   headline: z.string().min(1),
@@ -44,11 +63,13 @@ export const profileSchema = z.object({
   earlierPath: z.array(pathStepSchema),
   education: z.array(z.string().min(1)),
   skills: z.array(skillSchema).max(10),
+  cases: z.array(caseStudySchema),
 })
 
 export type Position = z.infer<typeof positionSchema>
 export type Profile = z.infer<typeof profileSchema>
 export type Skill = z.infer<typeof skillSchema>
+export type CaseStudy = z.infer<typeof caseStudySchema>
 
 export const profile = profileSchema.parse({
   name: 'Michael Mas',
@@ -77,7 +98,7 @@ export const profile = profileSchema.parse({
     { period: '2020 – 2021', label: 'Support technicien informatique (helpdesk)' },
     {
       period: '2012 – 2020',
-      label: "Métiers de service et d'aide : restauration, bar-tabac, aide à domicile",
+      label: "Métiers de service et d'aide : restauration, bar-tabac, aide à domicile",
     },
   ],
   education: ['Bac pro commerce'],
@@ -98,7 +119,7 @@ export const profile = profileSchema.parse({
       name: 'Intégrations e-commerce',
       group: 'production',
       usage:
-        'Plugins et applications PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify ; exports catalogue et imports de commandes via les API des plateformes.',
+        'Plugins et applications PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify ; exports catalogue et imports de commandes via les API des plateformes.',
       proof: 'Études de cas ci-dessus',
     },
     {
@@ -130,6 +151,48 @@ export const profile = profileSchema.parse({
       group: 'rendering',
       usage: 'Scénographie de ce site et expérience 3D System://Alive, shaders écrits à la main.',
       proof: 'Code public',
+    },
+  ],
+  cases: [
+    {
+      id: 'cas-plugins',
+      title: 'Reprendre un périmètre d’intégrations sans passation, et le stabiliser',
+      context:
+        'À mon arrivée chez Lengow, comme Software Support Developer, j’ai reçu les dépôts des plugins et des applications, et la file de support qui allait avec — sans passation. Le périmètre : PrestaShop, Magento 1 et 2, WooCommerce, Shopware 5 et 6, Shopify.',
+      problem:
+        'Des imports de commandes échouaient, certains exports catalogue aussi, et plusieurs plugins avaient pris du retard sur les nouvelles versions des CMS. Chaque ticket touchait une plateforme que je devais d’abord apprendre à installer et à faire tourner.',
+      constraint:
+        'Tout arrivait en même temps, sans historique ni personne à qui demander. Les erreurs dépendaient de l’environnement du marchand — version de PHP, configuration du serveur, taille du catalogue — que je ne contrôlais pas, et les tableaux de bord des éditeurs ne gardaient guère plus qu’un code d’erreur.',
+      decisions: [
+        {
+          choice: 'Les problèmes qui touchaient les marchands d’abord, la compatibilité ensuite.',
+          rejected: 'Rattraper d’abord les retards de compatibilité.',
+          why: 'Un marchand dont les commandes ne remontent plus est un marchand qui s’en va.',
+        },
+        {
+          choice:
+            'Une exception : l’application Shopify passée en tête dès l’avertissement de retrait pour non-conformité — API dépréciée et taux d’erreur élevé sur les webhooks. Un mois accordé ; livré en deux semaines, sans avoir jamais touché Shopify, avec une relance de leur support pour accélérer la revue.',
+          rejected: 'Appliquer la règle de priorité sans exception.',
+          why: 'Le retrait menaçait l’application entière, pas un marchand.',
+        },
+        {
+          choice:
+            'Diagnostiquer de mon côté : logs des plugins, reproduction locale, puis Datadog.',
+          rejected: 'S’appuyer sur les tableaux de bord partenaires des éditeurs.',
+          why: 'Rétention courte, et guère plus qu’un code d’erreur.',
+        },
+        {
+          choice:
+            'Rendre les plugins rétrocompatibles sur une plage de versions, et déprécier au fur et à mesure celles que les éditeurs eux-mêmes ne supportaient plus.',
+          rejected: 'Maintenir toutes les versions indéfiniment.',
+          why: 'Les éditeurs eux-mêmes ne les maintenaient plus.',
+        },
+      ],
+      result:
+        'Plus d’erreur liée à ces causes racines, et une surveillance pour repérer les nouvelles. L’urgence passée, j’ai remboursé la dette — tests PHPUnit, Vitest et Playwright, exécutés à chaque PR — puis transmis le périmètre au développeur arrivé ensuite, avec la documentation qui manquait à mon arrivée.',
+      differently: null,
+      proof:
+        'Code propriétaire, pas de lien public — je détaille volontiers l’implémentation en entretien.',
     },
   ],
 } satisfies Profile)
