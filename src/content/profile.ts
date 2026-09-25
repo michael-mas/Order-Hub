@@ -62,6 +62,8 @@ export const profileSchema = z.object({
   links: z.object({
     github: z.url(),
     linkedin: z.url(),
+    /** The deployed 3D experience (System://Alive). Its code stays private. */
+    experience: z.url(),
   }),
   positions: z.array(positionSchema).min(1),
   /** Before Lengow, condensed for display. Full detail lives in docs/PARCOURS.md. */
@@ -85,6 +87,7 @@ export const profile = profileSchema.parse({
   links: {
     github: 'https://github.com/michael-mas',
     linkedin: 'https://www.linkedin.com/in/michaelmasdev',
+    experience: 'https://personnal-portfolio-test77.vercel.app',
   },
   positions: [
     { title: 'Software Developer', company: 'Lengow', start: '2023-10-01', end: null },
@@ -271,7 +274,7 @@ export const profile = profileSchema.parse({
         'Les deux chemins fonctionnent ; les visiteurs reçoivent le chemin WebGL, et WebGPU reste ouvrable. Deux bugs dépendants du framerate m’ont laissé une règle que j’applique depuis : toute logique qui dépend de la durée d’une frame est un bug en attente d’une machine plus lente. Ce site en hérite directement, avec un lissage borné et testé.',
       differently:
         'Je partirais avec des tests et une intégration continue dès le premier jour — c’est ce que fait ce site.',
-      proof: null,
+      proof: 'L’expérience elle-même, en ligne — le code reste privé.',
     },
   ],
 } satisfies Profile)

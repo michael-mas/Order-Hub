@@ -52,11 +52,11 @@ export default function HomePage() {
             study={profile.cases.find((c) => c.id === 'cas-system-alive')}
             fallbackTitle="System://Alive"
             act="structure"
-            source="le dépôt de l'expérience est privé aujourd'hui : le rendre public, ou ne lier que l'expérience ?"
+            source="lien vers l'expérience"
             proofExpected
           />
         </div>
-        <Experience />
+        <Experience profile={profile} />
         <Skills skills={profile.skills} />
         <Path profile={profile} />
         <Contact profile={profile} />

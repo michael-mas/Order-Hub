@@ -25,7 +25,7 @@ export function SiteFooter({ profile }: { profile: Profile }) {
         </ul>
         <ul className="label-mono space-y-3 text-text-faint">
           <li>
-            System://Alive — expérience 3D <Pending>URL définitive</Pending>
+            <a href={profile.links.experience}>System://Alive — expérience 3D</a>
           </li>
           <li>
             Code My Life <Pending>URL et durée du parcours</Pending>

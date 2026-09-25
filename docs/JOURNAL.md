@@ -5,6 +5,14 @@
 
 ## 2026-09-25
 
+- **Preuve de System://Alive : option B choisie par Michael** — pas de code
+  visible ; la preuve est l'expérience en ligne
+  (`profile.links.experience`). Section « Ouvrir l'expérience » remplie (lien
+  principal + lien `?webgpu`), pied de page lié. Restent en marqueurs : durée
+  d'un premier parcours, domaine définitif.
+  **Point ouvert** : l'analyse (04 § 6.1) voulait un lien de retour vers ce
+  site depuis l'expérience, mais le brief interdit de pousser dans le dépôt
+  source. Le texte ne promet donc pas « vous pouvez en sortir à tout moment ».
 - **Déploiement confirmé par Michael** : `feat/sprint2-quickwins` est en
   production → WebGL servi par défaut, WebGPU derrière `?webgpu` : la décision
   n° 4 du cas est vraie pour le site en ligne.
