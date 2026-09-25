@@ -1,3 +1,4 @@
+import { ScenePortal } from '@/components/ScenePortal'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
 import { CaseStudy } from '@/components/sections/CaseStudy'
@@ -18,6 +19,7 @@ export default function HomePage() {
       >
         Aller au contenu
       </a>
+      <ScenePortal />
       <SiteHeader name={profile.name} />
       <main>
         <Hero profile={profile} />

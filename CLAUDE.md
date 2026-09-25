@@ -77,6 +77,10 @@ src/scene/device/       capacités (estimation), 4 paliers off/low/medium/high,
 src/scene/scroll/       store de progression hors React (document + sections)
 src/scene/interaction/  picking sur liste explicite, 1 rayon max par frame
 src/scene/engine/       boucle unique : dt borné, cap FPS, pause cachée/hors écran
+src/scene/acts/         formes procédurales (flux, treillis), storyboard scroll → état,
+                        matériau GLSL (cœur + halo, 0 octet envoyé au GPU par frame)
+src/scene/Scenography.ts orchestrateur, importé à la demande (jamais dans le JS initial)
+src/components/ScenePortal.tsx seul point de montage ; rien au palier off ni avec ?3d=off
 scripts/                capture-scene.mjs, capture-page.mjs, server.mjs
 src/styles/tokens.ts    couleurs des deux thèmes (source unique) → CSS généré ;
                         contrastes WCAG AA testés (tokens.test.ts)
@@ -129,7 +133,20 @@ Documents d'analyse de référence : dépôt source, branche
    `scripts/server.mjs`) ; attendre `body[data-scene-ready]` en `state:
 'attached'` (le body a une hauteur nulle).
 
-## 8. Design system
+## 8. Scénographie
+
+- Deux nuages de points dans les volumes `flow` et `structure` du layout ;
+  leur présence suit `ACT_STATES` (storyboard) selon la progression du
+  document, avec des seuils mesurés sur les vraies sections
+  (`data-scene-act`), jamais écrits en dur.
+- **Bande de texte** : en paysage, le sujet est décalé à droite
+  (`shiftLandscape`) et le test `findTextBandIntrusions` interdit tout objet
+  cadré à gauche de `textBandNdcX`. En portrait, sujet décalé vers le bas et
+  opacité réduite (`PORTRAIT_ALPHA`).
+- Opacité plafonnée (`MAX_CORE_ALPHA`) pour garder le texte lisible.
+- `?3d=off` coupe la scène : c'est le test « couper le canvas », couvert en e2e.
+
+## 9. Design system
 
 - Registre « instrumentation » (pas cyberpunk) : un seul accent vert, gris
   pour la hiérarchie, mono capitales interlettrées pour les métadonnées.
@@ -141,7 +158,7 @@ Documents d'analyse de référence : dépôt source, branche
   (`data-pending`). Zéro marqueur avant publication.
 - `:focus-visible` global, `prefers-reduced-motion` coupe les animations.
 
-## 9. Pièges connus — ne pas les redécouvrir
+## 10. Pièges connus — ne pas les redécouvrir
 
 - **Lerp écrit à la main interdit.** `lerp(a, b, dt * k)` extrapole dès que
   `dt * k > 1` (bug historique `CatmullRomCurve3.getPoint`). Utiliser
@@ -154,6 +171,8 @@ Documents d'analyse de référence : dépôt source, branche
 - **Rotations en radians**, via `deg()` — les littéraux de rotation bruts sont
   interdits par lint, comme les appels `lerp` sans `dampFactor`.
 - TypeScript 7 : incompatible avec typescript-eslint (< 6.1) à ce jour.
+- Précision float32 : une coordonnée stockée dans un `Float32Array` peut
+  dépasser sa borne de ~1e-8 ; les tests de bornes tolèrent 1e-6, pas plus.
 - Captures pendant un scroll animé (`scroll-behavior: smooth`) : l'en-tête
   sticky paraît décalé. Attendre la fin du scroll, ou scroller en `instant`
   comme `capture-page.mjs`.
@@ -161,7 +180,7 @@ Documents d'analyse de référence : dépôt source, branche
   chaque frame ; le mobile ouvrait trois contextes WebGL ; la fonte Bulzing
   est sous licence non commerciale. Rien de cela ne revient.
 
-## 10. Où on en est
+## 11. Où on en est
 
 Voir la dernière entrée de `docs/JOURNAL.md`. Ordre de construction : outillage
 (captures déterministes, tests d'assertion spatiale) → ossature + design

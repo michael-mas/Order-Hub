@@ -68,6 +68,28 @@ export function findOutOfFrame(
   return problems
 }
 
+/** Framed objects must not reach into the text band on landscape screens. */
+export function findTextBandIntrusions(
+  layout: SceneLayout,
+  aspects: readonly number[] = FRAME_ASPECTS,
+): string[] {
+  const limit = layout.camera.textBandNdcX
+  if (limit <= -1) return []
+  const problems: string[] = []
+  for (const aspect of aspects.filter((a) => a >= 1)) {
+    const camera = createProductionCamera(layout.camera, aspect)
+    for (const entry of layout.entries.filter((e) => e.mustBeInFrame)) {
+      const minX = Math.min(...corners(worldBox(entry)).map((c) => c.clone().project(camera).x))
+      if (minX < limit) {
+        problems.push(
+          `text band: "${entry.name}" reaches x=${minX.toFixed(2)} (NDC) at aspect ${aspect.toFixed(2)}, limit ${limit}`,
+        )
+      }
+    }
+  }
+  return problems
+}
+
 export function findGroundErrors(layout: SceneLayout): string[] {
   return layout.entries
     .filter((e) => e.grounded)
@@ -95,5 +117,6 @@ export function validateLayout(layout: SceneLayout): string[] {
     ...findGroundErrors(layout),
     ...findCollisions(layout),
     ...findOutOfFrame(layout),
+    ...findTextBandIntrusions(layout),
   ]
 }

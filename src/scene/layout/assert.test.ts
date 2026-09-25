@@ -5,6 +5,7 @@ import {
   findGroundErrors,
   findOutOfFrame,
   findScaleErrors,
+  findTextBandIntrusions,
   worldBox,
 } from './assert'
 import { fitDistance } from './camera'
@@ -35,6 +36,9 @@ function layout(entries: LayoutEntry[]): SceneLayout {
       fitRadius: 2,
       near: 0.1,
       far: 100,
+      shiftLandscape: [0, 0],
+      shiftPortrait: [0, 0],
+      textBandNdcX: -1,
     },
     entries,
   }
@@ -104,6 +108,20 @@ describe('findGroundErrors', () => {
 describe('findScaleErrors', () => {
   it('catches a ×100 import mistake', () => {
     expect(findScaleErrors(layout([entry({ name: 'cat', scale: 100 })]))[0]).toContain('"cat"')
+  })
+})
+
+describe('findTextBandIntrusions', () => {
+  it('flags a framed object that reaches into the text band', () => {
+    const l = { ...layout([entry({ name: 'wide', size: [3, 0.2, 0.2] })]) }
+    l.camera = { ...l.camera, textBandNdcX: 0 }
+    expect(findTextBandIntrusions(l, [1.6])[0]).toContain('"wide"')
+  })
+
+  it('accepts it once the subject is shifted right', () => {
+    const l = { ...layout([entry({ name: 'small', size: [0.4, 0.4, 0.4] })]) }
+    l.camera = { ...l.camera, textBandNdcX: 0, shiftLandscape: [0.25, 0] }
+    expect(findTextBandIntrusions(l, [1.6])).toEqual([])
   })
 })
 

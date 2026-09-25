@@ -5,6 +5,29 @@
 
 ## 2026-09-25
 
+- **Phase 5.3 — scénographie branchée sur le scroll.** Deux nuages de points
+  procéduraux (flux à gauche, treillis à droite), placés par `HERO_LAYOUT`,
+  animés au vertex shader (0 octet envoyé au GPU par frame, 2 passes cœur +
+  halo, pas de post-processing). Présence pilotée par un storyboard continu
+  (hero au repos → deux moitiés → flux sur les cas e-commerce → structure sur
+  System://Alive → pic au seuil de l'expérience → calme au contact), seuils
+  dérivés des sections mesurées. Montée après idle, chunk Three importé à la
+  demande.
+  **Défaut vu sur capture et corrigé** : la scène passait sous les colonnes de
+  texte. Sujet décalé à droite en paysage, vers le bas en portrait avec
+  opacité réduite ; nouvelle assertion spatiale `findTextBandIntrusions`.
+  **Écart assumé au brief** : générateurs écrits neufs plutôt que portés de
+  `particleShapes.ts` — ses formes (bateau, humanoïde…) sont le vocabulaire
+  de `/codemylife` ; on reprend son contrat (fonctions pures, graine
+  explicite), pas ses sujets.
+  **Mesures locales, non bridées** : LCP 68-240 ms (élément `h1` ou `p`,
+  jamais le canvas), CLS 0, 0 erreur, 1 long task (~80 ms, initialisation de
+  la scène, après le LCP). JS initial **170 kB gz — au-dessus du plafond de
+  160 kB** de 03-ARCHITECTURE : dette ouverte. Chunk Three 218 kB gz, chargé
+  à la demande. E2E : scène montée, canvas jamais LCP, `?3d=off` et
+  `prefers-reduced-motion` sans canvas.
+  **Reste à faire** : poster statique pour le palier `off` (optionnel, la page
+  est complète sans), budget `size-limit` en CI.
 - **Phase 5.2 — ossature et design system.** Tokens de couleur en TypeScript
   (source unique, CSS généré, 22 tests de contraste WCAG AA sur les deux
   thèmes) ; Inter + JetBrains Mono auto-hébergées (48 + 40 kB, OFL) ; thème

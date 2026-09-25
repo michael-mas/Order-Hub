@@ -45,6 +45,14 @@ export const cameraSchema = z.object({
   fitRadius: finite.positive(),
   near: finite.positive(),
   far: finite.positive(),
+  /** Subject offset on screen as a fraction of the frame: +x right, +y down. */
+  shiftLandscape: z.tuple([finite.min(-0.4).max(0.4), finite.min(-0.4).max(0.4)]),
+  shiftPortrait: z.tuple([finite.min(-0.4).max(0.4), finite.min(-0.4).max(0.4)]),
+  /**
+   * Left share of a landscape frame reserved for text, in NDC: no framed
+   * object may project left of this x. -1 disables the check.
+   */
+  textBandNdcX: finite.min(-1).max(1),
 })
 
 export type CameraSpec = z.infer<typeof cameraSchema>

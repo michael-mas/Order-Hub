@@ -41,7 +41,7 @@ export function Hero({ profile }: { profile: Profile }) {
         </a>
         <a
           href="#contact"
-          className="rounded-md border border-border-strong px-5 py-3 font-medium text-text no-underline hover:border-accent"
+          className="rounded-md border border-border-strong bg-bg px-5 py-3 font-medium text-text no-underline hover:border-accent"
         >
           Me contacter
         </a>

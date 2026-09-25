@@ -16,6 +16,9 @@ export const HERO_LAYOUT = layoutSchema.parse({
     fitRadius: 3.2,
     near: 0.1,
     far: 60,
+    shiftLandscape: [0.24, 0],
+    shiftPortrait: [0, 0.32],
+    textBandNdcX: -0.1,
   },
   entries: [
     {
