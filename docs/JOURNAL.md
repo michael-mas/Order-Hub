@@ -5,6 +5,15 @@
 
 ## 2026-09-25
 
+- **Phase 3 — socle du dépôt.** Next.js 16.3, React 19.3, TypeScript 5.9
+  strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), Tailwind 4,
+  ESLint (config Next, zéro avertissement toléré), Prettier, Vitest, Playwright
+  1.56 (aligné sur le Chromium préinstallé). `npm run verify` = typecheck + lint
+  + format + tests. CI GitHub Actions : verify + build, puis e2e.
+  Premiers modules : `src/lib/motion/damp.ts` (lissage exponentiel borné, qui
+  remplace tout lerp écrit à la main) et `src/content/profile.ts` (faits
+  validés, schéma zod, durées calculées). La page consomme `profile.ts`.
+  TypeScript 7 écarté : typescript-eslint ne le supporte pas encore (< 6.1).
 - **Phase 1 — `docs/PARCOURS.md` validé par Michael.** Couvre : chronologie
   2012 → aujourd'hui, périmètre Lengow, tri des compétences, cas A (reprise du
   périmètre plugins sans passation) et B (centralisation de l'import des
