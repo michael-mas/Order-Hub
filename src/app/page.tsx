@@ -1,3 +1,4 @@
+import { PersonJsonLd } from '@/components/PersonJsonLd'
 import { ScenePortal } from '@/components/ScenePortal'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
@@ -19,6 +20,7 @@ export default function HomePage() {
       >
         Aller au contenu
       </a>
+      <PersonJsonLd profile={profile} />
       <ScenePortal />
       <SiteHeader name={profile.name} />
       <main>

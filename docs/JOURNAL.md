@@ -5,6 +5,17 @@
 
 ## 2026-09-25
 
+- **Phase 5.5 — SEO, partage, CV.** Métadonnées (titre, description =
+  accroche, canonique, Open Graph `profile`, carte Twitter) ; image de
+  partage générée au build depuis `profile.ts` ; `robots.txt` (exclut
+  `/dev/`), `sitemap.xml` ; JSON-LD `Person`. **CV PDF** généré au build par
+  `@react-pdf/renderer` depuis `profile.ts` (`/cv-michael-mas.pdf`, une page,
+  testé) — il ne peut plus diverger de la page. Polices woff statiques
+  d'Inter dans `assets/fonts` (serveur uniquement : l'image de partage et le
+  PDF n'acceptent pas le woff2). Le glyphe U+2011 manquant dans le PDF est
+  remplacé par un trait d'union simple. Domaine canonique : variable
+  `SITE_URL`, à définir au déploiement (domaine non choisi). Compétence
+  « services Lengow » → « services back‑end » (discrétion employeur).
 - **Retour de Michael sur l'accroche** : trop interprétative. Règle : phrases
   de présentation simples et descriptives. « Deux moitiés » → « Ce que je
   fais » (ancre `#profil`) ; « La production / Le rendu temps réel » →

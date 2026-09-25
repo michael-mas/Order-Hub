@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import type { ReactNode } from 'react'
 import { profile } from '@/content/profile'
+import { SITE_URL } from '@/lib/site'
 import { themeCss, themes } from '@/styles/tokens'
 import './globals.css'
 
@@ -20,8 +21,19 @@ const jetbrains = localFont({
 })
 
 export const metadata: Metadata = {
-  title: profile.name,
-  description: profile.headline,
+  metadataBase: new URL(SITE_URL),
+  title: `${profile.name} — ${profile.headline}`,
+  description: profile.tagline,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'profile',
+    locale: 'fr_FR',
+    url: '/',
+    siteName: profile.name,
+    title: `${profile.name} — ${profile.headline}`,
+    description: profile.tagline,
+  },
+  twitter: { card: 'summary_large_image' },
 }
 
 export const viewport: Viewport = {

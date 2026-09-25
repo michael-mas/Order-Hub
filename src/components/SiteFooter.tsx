@@ -1,4 +1,5 @@
 import type { Profile } from '@/content/profile'
+import { CV_PATH } from '@/lib/site'
 import { Pending } from './Pending'
 
 export function SiteFooter({ profile }: { profile: Profile }) {
@@ -20,7 +21,7 @@ export function SiteFooter({ profile }: { profile: Profile }) {
             <a href={profile.links.github}>GitHub</a>
           </li>
           <li>
-            CV PDF — <Pending kind="write">généré depuis profile.ts</Pending>
+            <a href={CV_PATH}>CV (PDF)</a>
           </li>
         </ul>
         <ul className="label-mono space-y-3 text-text-faint">

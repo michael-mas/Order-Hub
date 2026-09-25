@@ -88,6 +88,10 @@ src/app/globals.css     échelle typo, espacements, mapping Tailwind @theme
 src/app/fonts/          Inter + JetBrains Mono variables, woff2 latin, OFL
 src/components/         Section, Pending (marqueurs visibles), en-tête, pied
 src/components/sections 8 sections + hero ; aucun fait en dur, tout vient de profile.ts
+src/content/cv/         CV PDF (@react-pdf) dérivé de profile.ts → /cv-michael-mas.pdf
+src/app/opengraph-image.tsx, robots.ts, sitemap.ts   SEO et partage
+assets/fonts/           Inter woff (serveur : OG + PDF ; woff2 non supporté par eux)
+src/lib/site.ts         SITE_URL (variable d'environnement, domaine à choisir)
 src/app/                App Router ; contenu rendu serveur
 e2e/                    tests Playwright
 ```

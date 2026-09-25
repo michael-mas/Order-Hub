@@ -149,7 +149,7 @@ export const profile = profileSchema.parse({
     {
       name: 'PHP · Symfony',
       group: 'production',
-      usage: 'Plugins CMS et services Lengow, de PHP 7 à 8.4 et de Symfony 4 à 7.',
+      usage: 'Plugins CMS et services back‑end, de PHP 7 à 8.4 et de Symfony 4 à 7.',
       proof: 'En production',
     },
     {
