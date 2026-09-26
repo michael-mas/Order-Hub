@@ -3,6 +3,15 @@
 > Format : date — décision ou action — pourquoi — fichiers touchés.
 > Entrées les plus récentes en haut.
 
+## 2026-09-26
+
+- **Plan de deux POC publics** — comparaison de trois pistes (e-commerce
+  composable MACH, SaaS privacy-first à IA locale, certification Web2/Web3).
+  Recommandé : MACH (« Order Hub », simulateur de marketplace indocile) puis
+  IA locale (« Catalog Lens », enrichissement de catalogue dans le
+  navigateur). Web3 écarté : signal faible pour la cible, hors du récit.
+  En attente de l'arbitrage de Michael. → `docs/POC.md`.
+
 ## 2026-09-25
 
 - **Retour de Michael sur la version en ligne : « naze comparé à l'ancien »**
