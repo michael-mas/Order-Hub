@@ -18,8 +18,9 @@
   contre l'image elle-même.
 - **Mémoire mesurée en natif** (serveur PHP de développement à 5 processus) :
   environ 480 Mo au total, dont console 100 Mo, simulateur 100 Mo, worker
-  55 Mo. L'image utilise FrankenPHP (un seul processus) ; la CI publie la
-  mesure du conteneur (`docker stats`).
+  55 Mo. L'image utilise FrankenPHP (un seul processus) ; mesure du
+  conteneur en CI (`docker stats` après les suites, run 28) : **226 Mio**.
+  La démo tient dans une offre à 512 Mo.
 - **Corrigé en chemin** : identifiants UUID stockés en binaire hors
   PostgreSQL (passés en `guid`) ; filtres `#[ApiFilter]` dépréciés par API
   Platform 4.4 (remplacés par des paramètres de requête) ; limiteurs câblés

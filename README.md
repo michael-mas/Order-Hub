@@ -117,7 +117,8 @@ docker run -p 3000:3000 order-hub-demo        # le port suit $PORT
 N'importe quel hébergeur qui lance une image Docker convient (Render avec le
 Blueprint [`render.yaml`](render.yaml), Railway, Koyeb, Fly.io…). La CI
 construit cette image, la démarre et joue contre elle toute la suite de bout
-en bout, tempête comprise ; elle affiche aussi la mémoire consommée. Pour que
+en bout, tempête comprise, puis mesure la mémoire du conteneur (`docker stats`,
+job « Demo image ») : 226 Mio au premier relevé, après les deux suites. Pour que
 Claude rédige les analyses, définir `ANTHROPIC_API_KEY` ; sans clé, le moteur
 de règles répond.
 
