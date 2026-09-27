@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Simulator (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run verify
+
+  hub:
+    name: Hub (PHP)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/hub
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, pdo_pgsql
+          coverage: none
+          tools: composer:v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('apps/hub/composer.lock') }}
+      - run: composer install --no-interaction --no-progress
+      - run: composer validate --strict --no-check-publish
+      - run: vendor/bin/php-cs-fixer fix --dry-run --diff
+      - run: vendor/bin/phpstan analyse --no-progress
+      - run: vendor/bin/deptrac analyse --no-progress
+      - run: bin/console lint:container
+      - run: bin/console lint:yaml config
+      - name: Database
+        run: |
+          bin/console doctrine:database:create --env=test --if-not-exists
+          bin/console doctrine:migrations:migrate --env=test --no-interaction
+          bin/console doctrine:schema:validate --env=test
+      - run: vendor/bin/phpunit
