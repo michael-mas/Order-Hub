@@ -1,46 +1,22 @@
 {
-  "name": "michael-mas-portfolio",
-  "version": "0.1.0",
+  "name": "order-hub",
   "private": true,
-  "type": "module",
+  "description": "Composable e-commerce integration hub: reliable, observable order ingestion from unruly marketplaces",
+  "license": "MIT",
   "engines": {
     "node": ">=22"
   },
+  "workspaces": [
+    "apps/marketplace",
+    "apps/console",
+    "e2e"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint --max-warnings=0 .",
+    "verify": "npm run verify --workspaces --if-present",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "e2e": "playwright test",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test",
-    "capture:scene": "node scripts/capture-scene.mjs",
-    "capture": "node scripts/capture-page.mjs"
-  },
-  "dependencies": {
-    "@react-pdf/renderer": "4.9.0",
-    "next": "16.3.6",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "three": "0.186.1",
-    "zod": "4.6.5"
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1",
-    "@tailwindcss/postcss": "4.3.3",
-    "@types/node": "22.20.4",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "@types/three": "0.186.0",
-    "eslint": "9.39.5",
-    "eslint-config-next": "16.3.6",
-    "prettier": "3.9.9",
-    "tailwindcss": "4.3.3",
-    "typescript": "5.9.3",
-    "vitest": "5.0.2"
+    "prettier": "3.9.9"
   }
 }

@@ -1,7 +1,8 @@
-.next
+apps/hub
 node_modules
+.next
+coverage
 playwright-report
 test-results
 package-lock.json
-docs/*.md
-captures
+*.md
