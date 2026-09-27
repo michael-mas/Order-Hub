@@ -185,3 +185,57 @@ jobs:
         run: docker logs demo
       - if: always()
         run: docker rm -f demo
+
+  demo-constrained:
+    name: Demo image on a small free instance (512 MB, 0.1 CPU)
+    needs: [demo]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: docker build -f docker/demo/Dockerfile -t order-hub-demo .
+      - name: Start with the limits of a free instance, and time it
+        run: |
+          start=$(date +%s)
+          docker run -d --name demo --memory=512m --cpus=0.1 -p 3000:3000 -p 8100:8100 -e PORT=3000 order-hub-demo
+          for i in $(seq 1 150); do curl -fs -o /dev/null http://127.0.0.1:3000/api/health && break; sleep 2; done
+          curl -fsS http://127.0.0.1:3000/api/health
+          echo "healthy after $(( $(date +%s) - start )) s"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - name: The console works on the small instance
+        run: npx playwright test tests/console.spec.ts --project desktop
+        working-directory: e2e
+      - name: Memory used on the small instance
+        run: docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' demo
+      - if: failure()
+        run: docker logs demo
+      - if: always()
+        run: docker rm -f demo
+
+  publish-demo:
+    name: Publish the demo image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [demo]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push ghcr.io/michael-mas/order-hub-demo
+        run: |
+          image=ghcr.io/michael-mas/order-hub-demo
+          docker build -f docker/demo/Dockerfile \
+            --label org.opencontainers.image.source=https://github.com/michael-mas/Order-Hub \
+            -t "$image:latest" -t "$image:${GITHUB_SHA::7}" .
+          docker push --all-tags "$image"

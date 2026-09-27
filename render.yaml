@@ -5,6 +5,8 @@ services:
   - type: web
     name: order-hub-demo
     runtime: docker
+    # Free instance: sleeps when idle, wakes on the next visit with a fresh demo.
+    plan: free
     dockerfilePath: ./docker/demo/Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
