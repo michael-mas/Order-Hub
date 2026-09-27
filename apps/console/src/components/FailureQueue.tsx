@@ -55,7 +55,11 @@ export function FailureQueue({
           a fresh budget.
         </p>
       ) : (
-        <ul className="max-h-64 divide-y divide-line overflow-y-auto">
+        <ul
+          className="max-h-64 divide-y divide-line overflow-y-auto"
+          tabIndex={0}
+          aria-label="Failed messages"
+        >
           {data?.messages.map((m) => (
             <li key={m.id} className="flex items-start justify-between gap-3 px-4 py-3 text-xs">
               <div className="min-w-0">

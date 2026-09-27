@@ -28,7 +28,8 @@ final class JournalController extends AbstractController
         );
 
         return new JsonResponse([
-            'entries' => $entries,
+            // An empty context must stay a JSON object, not become [].
+            'entries' => array_map(static fn (array $e): array => ['context' => (object) $e['context']] + $e, $entries),
             'last_id' => [] === $entries ? $query->after : $entries[array_key_last($entries)]['id'],
         ]);
     }

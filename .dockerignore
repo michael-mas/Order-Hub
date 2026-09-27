@@ -1,0 +1,6 @@
+**/node_modules
+**/.next
+apps/hub
+coverage
+playwright-report
+test-results

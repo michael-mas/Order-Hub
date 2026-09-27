@@ -13,7 +13,12 @@ export function RecentOrders({ orders, error }: { orders: Order[] | null; error:
   return (
     <Panel title="Latest changes" id="orders">
       <ErrorNote message={error} />
-      <div className="overflow-x-auto">
+      <div
+        className="overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Latest changes, scrollable"
+      >
         <table className="w-full text-left text-xs">
           <caption className="sr-only">Orders most recently created or updated</caption>
           <thead className="text-faint">

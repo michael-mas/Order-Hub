@@ -31,6 +31,8 @@ final class ApiTest extends ApiTestCase
         self::assertSame(['two', 'three'], array_column($this->rows($tail, 'entries'), 'message'));
         self::assertSame($this->json($all)['last_id'], $this->json($tail)['last_id']);
 
+        self::assertStringContainsString('"context":{}', (string) $all->getContent(), 'An empty context is an object.');
+
         $errors = $this->request('GET', '/api/journal?min_severity=error');
         self::assertSame(['three'], array_column($this->rows($errors, 'entries'), 'message'));
 

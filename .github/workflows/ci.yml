@@ -68,3 +68,73 @@ jobs:
           bin/console doctrine:migrations:migrate --env=test --no-interaction
           bin/console doctrine:schema:validate --env=test
       - run: vendor/bin/phpunit
+
+  e2e:
+    name: End to end and resilience
+    needs: [node, hub]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, pdo_pgsql
+          coverage: none
+          tools: composer:v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: composer install --no-interaction --no-progress
+        working-directory: apps/hub
+      - run: npm ci
+      - run: npm run build --workspace @order-hub/console
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: e2e/stack.sh start
+      - run: npx playwright test
+        working-directory: e2e
+        env:
+          STORM_MS: '60000'
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            e2e/playwright-report
+            e2e/.stack/*.log
+          retention-days: 7
+      - if: always()
+        run: e2e/stack.sh stop
+
+  images:
+    name: Container images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+      - name: Whole system starts
+        run: |
+          docker compose up -d
+          for url in http://localhost:8000/health http://localhost:8100/health http://localhost:3000; do
+            for i in $(seq 1 60); do curl -fs -o /dev/null "$url" && break; sleep 2; done
+            curl -fsS -o /dev/null "$url"
+          done
+          curl -fsS http://localhost:3000/api/hub/api/channels
+      - if: failure()
+        run: docker compose logs
+      - if: always()
+        run: docker compose down -v

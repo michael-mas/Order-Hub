@@ -85,6 +85,8 @@ export function JournalFeed({ highlighted }: { highlighted: ReadonlySet<string> 
         ref={list}
         aria-live="off"
         aria-label="Journal entries, newest first"
+        // Scrollable: reachable with the keyboard.
+        tabIndex={0}
         className="max-h-[680px] min-h-[320px] flex-1 overflow-y-auto font-mono text-xs"
       >
         {visible.map((entry) => (
