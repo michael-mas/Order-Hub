@@ -31,47 +31,72 @@ PHP/Symfony + React/TypeScript, intégrations e-commerce). Plan et état :
 
 ## 3. Commandes
 
-| Commande                                            | Rôle                                           |
-| --------------------------------------------------- | ---------------------------------------------- |
-| `npm install`                                       | dépendances des espaces de travail Node        |
-| `npm run verify`                                    | verify de chaque espace de travail Node        |
-| `npm run format:check`                              | Prettier (hors `apps/hub` et Markdown)         |
-| `npm run dev --workspace @order-hub/marketplace`    | simulateur sur le port 8100                    |
-| `composer install` (dans `apps/hub`)                | dépendances du hub                             |
+| Commande                                                | Rôle                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------ |
+| `npm install`                                           | dépendances Node (simulateur, console, e2e)            |
+| `npm run verify`                                        | typecheck + lint + tests de chaque espace Node         |
+| `npm run format:check`                                  | Prettier (hors `apps/hub` et Markdown)                 |
+| `npm run build --workspace @order-hub/console`          | build de la console (requis par `e2e/stack.sh`)        |
+| `e2e/stack.sh start` / `stop`                           | système complet en natif, base dédiée `app_e2e`        |
+| `npx playwright test` (dans `e2e/`)                     | bout en bout, accessibilité, résilience (`STORM_MS`)   |
+| `docker compose up --build`                             | système complet en conteneurs                          |
+| Hub : voir `apps/hub/README.md`                         | php-cs-fixer, phpstan, deptrac, migrations, phpunit    |
 
-Node 22 (`.nvmrc`), PHP 8.4.
+Node 22 (`.nvmrc`), PHP 8.4, PostgreSQL 16. Playwright épinglé en 1.56.1
+(Chromium préinstallé de l'environnement distant) ; `playwright-core` est
+déclaré explicitement dans `e2e` pour qu'axe n'en tire pas une autre version.
 
 ## 4. Architecture
 
 ```
 apps/marketplace   simulateur (Hono, zod) — voir son README
-  src/random.ts      PRNG à graine ; Math.random interdit par lint
-  src/tokenBucket.ts quota d'un forfait
-  src/signature.ts   signature HMAC des webhooks (t=…,v1=…)
-  src/orders.ts      commandes, versions, pagination par curseur, visibilité différée
-  src/webhooks.ts    émission : pertes, doublons, délais, reprises
-  src/chaos.ts       configuration des pannes (zod), préréglages
-  src/marketplace.ts un canal ; src/world.ts les deux canaux ; src/app.ts HTTP
-apps/hub           Symfony 8.1 + API Platform 4 (squelette)
-docs/              PLAN, ARCHITECTURE, adr/, JOURNAL
+apps/hub           Symfony 8.1 + API Platform 4 + Messenger — voir son README
+  src/Domain         pur, sans framework (Deptrac) ; src/Application cas d'usage et ports
+  src/Infrastructure DBAL, HTTP, limiteur, Messenger, Claude ; src/Controller fins
+apps/console       Next.js 16 ; proxy serveur en liste blanche (src/lib/routes.ts)
+e2e                Playwright (console.spec, resilience.spec) ; stack.sh
+docs/              PLAN, ARCHITECTURE, adr/ (0001 → 0006), JOURNAL, console.png
+compose.yaml       postgres, migrate, hub, worker, marketplace, console
 ```
 
 ## 5. Contraintes techniques
 
 - TypeScript strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`),
-  ESLint `strictTypeChecked`, zéro avertissement.
-- TypeScript 5.9 : typescript-eslint ne supporte pas encore ≥ 6.1.
-- Tout aléatoire passe par `createRandom(seed)`. Temps et planification
-  injectés : aucun test ne dort ni n'ouvre de socket.
-- Hub : ordre des mises à jour par `version`, jamais par heure d'arrivée ;
-  effets de bord par outbox ; actions de l'analyste IA dans une liste fermée,
-  jamais exécutées sans humain (ADR 0004).
-- Modèle IA par défaut : `claude-opus-5`, configurable par l'environnement.
+  ESLint strict, zéro avertissement. TypeScript 5.9 : typescript-eslint ne
+  supporte pas encore ≥ 6.1.
+- PHP : PHPStan niveau max sans baseline, `@Symfony` + risky, Deptrac.
+  Lectures de lignes SQL via `Row::string/int` (pas de cast silencieux).
+- Tout aléatoire du simulateur passe par `createRandom(seed)` ; trois flux
+  séparés (commandes, pannes webhooks/visibilité, pannes API).
+- Hub : ordre des versions par `version` dans un seul upsert ; tout effet de
+  bord dispatché dans la transaction de la décision (ADR 0005) ; points de
+  reprise par page (ADR 0006) ; chaque décision journalisée.
+- Analyste IA : liste fermée d'actions, jamais exécutées sans humain ; preuves
+  filtrées ; moteur de règles sans clé (ADR 0004). Modèle par défaut
+  `claude-opus-5`.
+- Tests du hub : doublures dans `config/services_test.yaml` (horloge,
+  marketplace, limiteur, modèle) ; aucun test n'attend ni n'appelle le réseau.
 
 ## 6. Pièges connus
 
-- Composer : les archives GitHub des paquets de dev sont refusées dans
-  l'environnement distant tant qu'aucun `COMPOSER_AUTH` n'est fourni.
+- Environnement distant : Composer ne télécharge pas les paquets de dev
+  depuis GitHub. En local : `phpunit` 9.6 du paquet Ubuntu (`apt-get install
+  phpunit`) avec une config hors dépôt (il ne lit pas `phpunit.dist.xml`), et
+  les phars PHPStan / PHP-CS-Fixer (releases GitHub, accessibles). Les tests
+  restent compatibles 9.6 et 13 : méthodes `test*`, `@dataProvider` doublé de
+  l'attribut.
+- `pkill -f motif` / `pgrep -f motif` dans une commande shell tue aussi le
+  shell dont la ligne contient le motif : passer par un script.
+- `php -S` : sans `-d variables_order=EGPCS`, Symfony ignore les variables
+  d'environnement et lit `.env` (le web et le worker divergent de base).
+- Une réponse JSON d'un tableau PHP vide sort `[]` : forcer `(object)` pour un
+  objet (contexte du journal).
+- `MapQueryString` répond `404` par défaut sur une validation ratée : fixer
+  `validationFailedStatusCode: 422`.
+- eslint-plugin-react + ESLint 10 : version de React explicite dans
+  `settings`, sinon plantage.
+- Next.js 16 : `RouteContext` vient de `next typegen` (le script `typecheck`
+  le lance) ; `next start` avertit en sortie `standalone` mais fonctionne.
+- Docker local derrière le proxy : `--secret id=extra_ca,src=<bundle CA>` pour
+  les images Node ; l'image du hub ne se construit qu'en CI (Composer).
 - Symfony génère `AGENTS.md` / `CLAUDE.md` dans `apps/hub` : ignorés par git.
-- Hono : typer l'aide `problem()` avec `Context<E, P, any>` (le paramètre
-  d'entrée des middlewares est `any`).

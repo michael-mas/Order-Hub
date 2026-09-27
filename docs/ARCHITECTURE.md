@@ -1,87 +1,113 @@
 # Architecture
 
-> Ce document distingue ce qui **existe** de ce qui est **prévu**. Il est mis à
-> jour à chaque jalon.
+## Services
 
-## Vue d'ensemble
+| Service       | Pile                                                      | Port | Rôle                                                  |
+| ------------- | --------------------------------------------------------- | ---- | ----------------------------------------------------- |
+| `marketplace` | Node 22, TypeScript, Hono, zod                            | 8100 | deux marketplaces simulées, pannes réglables          |
+| `hub`         | PHP 8.4, Symfony 8.1, API Platform 4, Doctrine, Messenger | 8000 | API : webhooks, commandes, journal, opérations        |
+| `worker`      | même image que `hub`                                      | —    | file `async` et planificateur                         |
+| `console`     | Next.js 16, React 19                                      | 3000 | salle de contrôle ; proxy serveur vers hub et simulateur |
+| `postgres`    | PostgreSQL 16                                             | 5432 | commandes, journal, file de messages, quotas          |
 
-| Service       | Techno                                    | Port  | État         |
-| ------------- | ----------------------------------------- | ----- | ------------ |
-| `marketplace` | Node 22, TypeScript, Hono, zod            | 8100  | existe       |
-| `hub`         | PHP 8.4, Symfony 8.1, API Platform 4, Doctrine, Messenger | 8000 | squelette |
-| `console`     | Next.js, React, TypeScript                | 3000  | prévu        |
-| PostgreSQL    | 16                                        | 5432  | prévu (hub)  |
+## Garanties et mécanismes
 
-## Garanties visées par le hub
+1. **Exactement une fois, en effet.** Un événement webhook déjà vu (clé
+   `(canal, event_id)`) est répondu `200` et ignoré. Une commande a une clé
+   naturelle `(canal, id externe)`. L'accusé de réception envoie l'UUID du hub
+   comme référence : un renvoi obtient `200` (« déjà fait ») et compte comme
+   un succès ; une autre référence obtient `409` et part dans la file
+   d'échecs pour un humain.
+2. **Dernière version gagnante.** Une seule instruction décide :
+   `INSERT … ON CONFLICT (channel, external_id) DO UPDATE … WHERE
+   orders.version < EXCLUDED.version`. Deux livraisons concurrentes de la
+   même commande se sérialisent sur la clé unique ; l'heure d'arrivée ne
+   compte jamais.
+3. **Rien de perdu.** Les webhooks apportent la fraîcheur, le polling la
+   complétude (ADR 0003). Chaque poll relit un recouvrement de 30 s derrière
+   son point de reprise, pour les commandes que la marketplace liste en
+   retard ; un rattrapage balaie les 15 dernières minutes toutes les 2 min.
+4. **Progrès sous quota.** Le point de reprise avance après chaque page, sur
+   le `updated_at` des commandes lues (horloge de la marketplace) ; le
+   rattrapage garde son propre point de reprise. Un arriéré plus grand qu'une
+   rafale de quota se résorbe donc poll après poll (ADR 0006).
+5. **Effets de bord atomiques.** Le transport Messenger est Doctrine, dans la
+   même base : l'accusé de réception à envoyer est écrit dans la transaction
+   de la commande et de son entrée de journal. Tout est validé, ou rien
+   (ADR 0005).
+6. **Quota respecté.** Chaque appel consomme d'abord un jeton local (seau de
+   jetons par canal, partagé par les workers via la base). Sur `429`, le
+   canal est suspendu jusqu'à l'échéance de `Retry-After` ; les accusés de
+   réception attendent sans consommer leurs reprises.
+7. **Échecs visibles.** Une erreur de la marketplace est reprise avec backoff
+   (1 s, 3 s, 9 s, 27 s), puis le message rejoint la file d'échecs, listable et
+   rejouable depuis la console ; le rejeu retire et renvoie le message dans la
+   même transaction.
+8. **Observable.** Chaque décision écrit une entrée de journal dans sa propre
+   transaction : commande créée, mise à jour, doublon, version périmée,
+   webhook refusé, quota, reprise, échec, rejeu, opération manuelle, analyse.
 
-1. **Exactement une fois, en effet.** Une commande reçue plusieurs fois (webhook
-   dupliqué, webhook + polling, rejeu) n'est enregistrée et acquittée qu'une fois.
-   Moyens : identifiant d'événement unique (table de déduplication, contrainte
-   d'unicité), clé naturelle `(canal, id externe)`, accusé de réception
-   idempotent côté marketplace.
-2. **Dernière version gagnante.** Une mise à jour plus ancienne que celle
-   stockée est ignorée et journalisée — jamais appliquée. Moyen : comparaison
-   de `version`, pas de l'heure d'arrivée.
-3. **Rien de perdu.** Un webhook perdu est retrouvé par le polling ; une
-   commande visible en retard est retrouvée par le **recouvrement** de fenêtre
-   (on relit un peu avant le dernier point atteint) et par un rattrapage
-   périodique plus large. C'est la même approche que « fenêtre courte et
-   fréquente + filet de sécurité quotidien ».
-4. **Aucun effet de bord perdu.** L'accusé de réception à envoyer est écrit
-   dans une **outbox** dans la même transaction que la commande, puis relayé
-   vers Messenger. Un échec est repris avec backoff, puis placé dans une file
-   d'échecs rejouable depuis la console.
-5. **Quota respecté.** Le hub limite ses propres appels par canal (seau de
-   jetons local) et, sur `429`, suspend le canal jusqu'à l'échéance de
-   `Retry-After` au lieu d'insister.
-6. **Observable.** Chaque décision produit un événement de journal
-   (importée, doublon ignoré, version périmée, quota atteint, reprise, échec)
-   avec un identifiant de corrélation ; la console les affiche en direct.
-
-## Flux prévus
+## Flux
 
 ### Webhook (`nova`)
 
 ```
 POST /webhooks/nova
-  → vérifier la signature sur le corps brut (HMAC-SHA256, ±5 min)   sinon 401
-  → insérer event_id (unique)                                        doublon → 200 + journal
-  → publier IngestOrder(order) sur le bus                            → 202
-worker : IngestOrder
-  → upsert si version > version stockée                               sinon journal « périmée »
-  → même transaction : outbox AcknowledgeOrder
+  → signature vérifiée sur le corps brut (HMAC-SHA256, ± 5 min)          sinon 401 + journal
+  → event_id cohérent avec l'en-tête, commande valide                     sinon 422 + journal
+  → transaction : INSERT webhook_events (unique) ; message IngestOrder    doublon → 200 + journal
+  → 202
+worker : IngestOrder → OrderIngestor (ci-dessous)
 ```
 
-### Polling (`atlas`, et rattrapage de `nova`)
+### Polling (`atlas` toutes les 5 s, `nova` toutes les 30 s, rattrapage 2 min)
 
 ```
-planificateur (toutes les N s) → PollChannel(canal)
-  → canal suspendu (Retry-After) ?                                   → rien
-  → fenêtre = [curseur − recouvrement, maintenant]
-  → pages successives, un jeton local par appel
-  → chaque commande → même chemin qu'IngestOrder
-  → 429 → suspendre jusqu'à Retry-After, journal
-  → curseur avancé seulement après la dernière page
+PollChannel(canal, mode)
+  → verrou par canal ; canal en pause ou suspendu → rien
+  → since = point de reprise − 30 s   (rattrapage : reprise du balayage, ou maintenant − 15 min)
+  → par page : jeton local ? sinon arrêt « partiel » (reprise au prochain tick)
+               429 → suspension Retry-After ; 5xx → arrêt « échec »
+               chaque commande → OrderIngestor ; point de reprise = dernier updated_at lu
+  → rattrapage terminé → le prochain balaie à nouveau toute la fenêtre
 ```
 
-### Analyste d'incidents IA
+### Ingestion
+
+```
+OrderIngestor(canal, payload, source)
+  → validation stricte (identifiant, statut, devise, lignes, total recalculé, dates, version)
+  → transaction :
+       upsert atomique → créée | mise à jour | inchangée | périmée
+       entrée de journal
+       si créée : message AcknowledgeOrder
+```
+
+### Analyste d'incidents
 
 ```
 POST /api/incident-analyses
-  → contexte : N derniers événements d'avertissement/erreur, état des canaux,
-    taille de la file d'échecs
-  → Claude, sortie structurée (JSON Schema) :
-      résumé, gravité, constats[{ titre, explication, preuves: [id d'événement] }],
-      recommandations[{ action ∈ liste fermée, canal?, justification }]
-  → preuves filtrées : seules les références présentes dans le contexte restent
-  → sans clé d'API : moteur de règles, même format
-  → aucune action n'est exécutée par l'analyste ; un humain la déclenche
+  → contexte : 120 dernières entrées non routinières sur 30 min (avec identifiants),
+    comptage de toutes les entrées par type, état des canaux, taille de la file d'échecs
+  → Claude (sortie JSON Schema) si une clé est configurée, sinon moteur de règles ;
+    en cas d'échec du modèle, moteur de règles avec la raison
+  → filtre : preuves absentes du contexte retirées, constats sans preuve retirés,
+    actions impossibles retirées (canal inconnu, rien à rejouer), doublons retirés
+  → journal « analysis.produced »
+POST /api/incident-analyses/actions  → seulement les actions de la liste fermée, déclenchées par un humain
 ```
 
-Actions de la liste fermée : rejouer les échecs, suspendre / reprendre un canal,
-réduire la cadence de polling, lancer un rattrapage, ne rien faire.
+## Modèle de données
+
+| Table              | Contenu                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `orders`           | dernière version de chaque commande ; unique `(channel, external_id)`   |
+| `webhook_events`   | un enregistrement par `(channel, event_id)` accepté                     |
+| `journal`          | décisions, append-only, identifiant croissant                           |
+| `channel_states`   | point de reprise, rattrapage en cours, suspension, pause, dernier poll  |
+| `messenger_messages` | files `async` et `failed`                                             |
+| `cache_items`      | seaux de jetons des quotas locaux                                       |
 
 ## Contrat du simulateur
 
-Voir [`apps/marketplace/README.md`](../apps/marketplace/README.md) : routes,
-format des commandes, signature des webhooks, plan de contrôle.
+Voir [`apps/marketplace/README.md`](../apps/marketplace/README.md).
