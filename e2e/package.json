@@ -1,0 +1,15 @@
+{
+  "name": "@order-hub/e2e",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end and resilience tests across simulator, hub and console",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.20.4",
+    "typescript": "5.9.3"
+  }
+}

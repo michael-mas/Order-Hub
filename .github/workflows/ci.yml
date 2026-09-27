@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   node:
-    name: Simulator (TypeScript)
+    name: Simulator and console (TypeScript)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run verify
+      - run: npm run build --workspace @order-hub/console
 
   hub:
     name: Hub (PHP)
