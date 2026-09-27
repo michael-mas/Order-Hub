@@ -7,6 +7,7 @@ const world = createWorld({
   seed: Number(env('SIMULATOR_SEED', '20260926')),
   hubUrl: env('HUB_URL', 'http://localhost:8000'),
   controlToken: process.env.CONTROL_TOKEN ?? null,
+  maxOrders: Number(env('MAX_ORDERS_PER_MARKETPLACE', '2000')),
   secrets: {
     novaApiKey: env('NOVA_API_KEY', 'nova-demo-key'),
     novaWebhookSecret: env('NOVA_WEBHOOK_SECRET', 'nova-demo-webhook-secret'),

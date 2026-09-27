@@ -124,6 +124,12 @@ function ChannelCard({
             +20 orders
           </button>
         </div>
+        {marketplace?.capacity.reached && (
+          <p className="mt-2 text-xs leading-5 text-warn">
+            {marketplace.capacity.max_orders.toLocaleString('en')} orders reached: this demo creates
+            no new ones until its next reset. Updates go on.
+          </p>
+        )}
         {marketplace && (
           <p className="mt-2 font-mono text-[11px] leading-5 text-faint">
             quota {marketplace.chaos.rateLimit.capacity} burst ·{' '}

@@ -13,6 +13,8 @@ export interface MarketplaceDefinition {
   webhookSecret: string
   /** Where change notifications go; null for a channel that only offers polling. */
   webhookTarget: string | null
+  /** Beyond it, no new order is created (updates go on): memory stays bounded. */
+  maxOrders: number
   chaos: Chaos
 }
 
@@ -93,10 +95,19 @@ export class Marketplace {
     return this.bucket.take(this.runtime.now())
   }
 
-  /** Creates and advances orders now, notifying the hub for each change. */
-  generate(orders: number, updates: number): void {
+  get capacityReached(): boolean {
+    return this.store.size >= this.definition.maxOrders
+  }
+
+  /**
+   * Creates and advances orders now, notifying the hub for each change. New
+   * orders stop at the cap; returns what was actually done.
+   */
+  generate(orders: number, updates: number): { created: number; updated: number } {
     const delay = (): number => this.runtime.faults.int(0, this.chaosConfig.visibilityDelayMaxMs)
-    for (let i = 0; i < orders; i += 1) {
+    const created = Math.max(0, Math.min(orders, this.definition.maxOrders - this.store.size))
+    let updated = 0
+    for (let i = 0; i < created; i += 1) {
       const change = this.store.create(this.runtime.now(), delay())
       this.webhooks.emit(
         this.definition.webhookTarget,
@@ -108,6 +119,7 @@ export class Marketplace {
     for (let i = 0; i < updates; i += 1) {
       const change = this.store.advanceRandom(this.runtime.now(), delay())
       if (!change) break
+      updated += 1
       this.webhooks.emit(
         this.definition.webhookTarget,
         change.kind,
@@ -115,6 +127,7 @@ export class Marketplace {
         this.chaosConfig.webhooks,
       )
     }
+    return { created, updated }
   }
 
   /**
@@ -138,6 +151,7 @@ export class Marketplace {
       name: this.definition.name,
       supports_webhooks: this.supportsWebhooks,
       orders: this.store.size,
+      capacity: { max_orders: this.definition.maxOrders, reached: this.capacityReached },
       chaos: this.chaosConfig,
       api: this.api,
       webhooks: this.webhooks.stats,

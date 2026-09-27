@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { compare, type HubOrder, type TruthOrder } from '@/lib/consistency'
-import { hubUrl, simulatorHeaders, simulatorUrl } from '@/lib/proxy'
+import { hubUrl, simulatorHeaders, simulatorUrl, throttle } from '@/lib/proxy'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +16,7 @@ const hubPageSchema = z.array(
   z.object({ id: z.string(), channel: z.string(), externalId: z.string(), version: z.number() }),
 )
 const PAGE = 100
+/** Above the simulator's order cap (2 × 2,000 by default): a full check fits. */
 const MAX_PAGES = 50
 
 async function json(url: string, headers: Record<string, string> = {}): Promise<unknown> {
@@ -30,6 +31,8 @@ async function json(url: string, headers: Record<string, string> = {}): Promise<
 
 /** Compares the simulator's ground truth with every order the hub holds. */
 export async function GET() {
+  const refused = throttle('consistency')
+  if (refused !== null) return refused
   try {
     const truth: TruthOrder[] = []
     for (const channel of ['nova', 'atlas']) {
@@ -47,7 +50,14 @@ export async function GET() {
     }
 
     const hub: HubOrder[] = []
-    for (let page = 1; page <= MAX_PAGES; page += 1) {
+    for (let page = 1; ; page += 1) {
+      if (page > MAX_PAGES) {
+        // A partial read would report orders as missing: no verdict is better.
+        return Response.json(
+          { error: `More than ${PAGE * MAX_PAGES} orders in the hub: too many to verify here.` },
+          { status: 422 },
+        )
+      }
       const rows = hubPageSchema.parse(
         await json(`${hubUrl()}/api/orders?itemsPerPage=${PAGE}&page=${page}&order[id]=asc`),
       )

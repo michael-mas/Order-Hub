@@ -115,6 +115,7 @@ export const marketplaceSchema = z.object({
   name: z.string(),
   supports_webhooks: z.boolean(),
   orders: z.number(),
+  capacity: z.object({ max_orders: z.number(), reached: z.boolean() }),
   chaos: chaosSchema,
   api: z
     .object({ requests: z.number(), throttled: z.number(), injectedErrors: z.number() })

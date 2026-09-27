@@ -9,6 +9,8 @@ export interface WorldConfig {
   /** Hub base URL; webhooks go to `<hubUrl>/webhooks/<code>`. */
   hubUrl: string
   controlToken: string | null
+  /** Orders each marketplace keeps at most: bounds memory and listing cost. */
+  maxOrders: number
   secrets: { novaApiKey: string; novaWebhookSecret: string; atlasApiKey: string }
 }
 
@@ -42,6 +44,7 @@ function definitions(config: WorldConfig): MarketplaceDefinition[] {
       apiKey: config.secrets.novaApiKey,
       webhookSecret: config.secrets.novaWebhookSecret,
       webhookTarget: `${config.hubUrl.replace(/\/$/, '')}/webhooks/nova`,
+      maxOrders: config.maxOrders,
       chaos: structuredClone(PRESETS.calm),
     },
     {
@@ -51,6 +54,7 @@ function definitions(config: WorldConfig): MarketplaceDefinition[] {
       apiKey: config.secrets.atlasApiKey,
       webhookSecret: '',
       webhookTarget: null,
+      maxOrders: config.maxOrders,
       chaos: structuredClone(PRESETS.calm),
     },
   ]

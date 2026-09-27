@@ -185,8 +185,8 @@ export function createApp(options: AppOptions): Hono {
     if (!m) return problem(c, 404, 'unknown_marketplace', 'No such marketplace')
     const parsed = generateSchema.safeParse(await c.req.json().catch(() => ({})))
     if (!parsed.success) return problem(c, 400, 'invalid_body', z.prettifyError(parsed.error))
-    m.generate(parsed.data.orders ?? 0, parsed.data.updates ?? 0)
-    return c.json(m.status(), 202)
+    const done = m.generate(parsed.data.orders ?? 0, parsed.data.updates ?? 0)
+    return c.json({ ...m.status(), generated: done }, 202)
   })
 
   /** Ground truth: what the hub is expected to hold, for tests and the console. */

@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { IncidentAnalyst } from '@/components/IncidentAnalyst'
 import { OverviewBar } from '@/components/OverviewBar'
+import { ChannelsPanel } from '@/components/ChannelsPanel'
 import { FailureQueue } from '@/components/FailureQueue'
+import type { Channel, Marketplace } from '@/lib/hub'
 
 function mockFetch(responses: Record<string, unknown>) {
   const calls: { url: string; init: RequestInit | undefined }[] = []
@@ -124,5 +126,60 @@ describe('FailureQueue', () => {
     render(<FailureQueue data={{ count: 0, messages: [] }} error={null} onChange={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Replay all' })).toBeDisabled()
     expect(screen.getByText(/Messages land here only after every retry/)).toBeInTheDocument()
+  })
+})
+
+describe('ChannelsPanel', () => {
+  const channel: Channel = {
+    code: 'atlas',
+    name: 'Atlas Marketplace',
+    supports_webhooks: false,
+    poll_interval_seconds: 5,
+    paused: false,
+    throttled_until: null,
+    cursor: null,
+    reconciliation_in_progress: false,
+    last_poll_at: null,
+    last_poll_outcome: 'completed',
+    orders: 2000,
+    acknowledged: 2000,
+    updated_last_5_min: 0,
+  }
+  const marketplace = (reached: boolean): Marketplace => ({
+    code: 'atlas',
+    name: 'Atlas Marketplace',
+    supports_webhooks: false,
+    orders: 2000,
+    capacity: { max_orders: 2000, reached },
+    chaos: {
+      latencyMs: { min: 0, max: 0 },
+      errorRate: 0,
+      rateLimit: { capacity: 10, refillPerSecond: 2 },
+      visibilityDelayMaxMs: 0,
+      webhooks: { dropRate: 0, duplicateRate: 0, maxDelayMs: 0 },
+      generation: { ordersPerMinute: 12, updatesPerMinute: 12 },
+    },
+    api: { requests: 0, throttled: 0, injectedErrors: 0 },
+    webhooks: { emitted: 0, dropped: 0, duplicated: 0, delivered: 0 },
+  })
+  const renderPanel = (reached: boolean) =>
+    render(
+      <ChannelsPanel
+        channels={[channel]}
+        marketplaces={[marketplace(reached)]}
+        error={null}
+        now={Date.parse('2026-09-28T10:00:00Z')}
+        onChange={() => undefined}
+      />,
+    )
+
+  it('says when the demo stops creating orders at its cap', () => {
+    renderPanel(true)
+    expect(screen.getByText(/2,000 orders reached/)).toBeInTheDocument()
+  })
+
+  it('stays quiet below the cap', () => {
+    renderPanel(false)
+    expect(screen.queryByText(/orders reached/)).not.toBeInTheDocument()
   })
 })

@@ -6,6 +6,7 @@ const config: WorldConfig = {
   seed: 1234,
   hubUrl: 'http://hub.test/',
   controlToken: null,
+  maxOrders: 500,
   secrets: { novaApiKey: 'nova-key', novaWebhookSecret: 'whsec', atlasApiKey: 'atlas-key' },
 }
 
@@ -165,6 +166,28 @@ describe('control plane', () => {
       orders: unknown[]
     }
     expect(truth.orders).toHaveLength(3)
+  })
+
+  it('stops creating orders at the cap, and says so, while updates go on', async () => {
+    const { call, world, json } = setup({ maxOrders: 5 })
+    const response = await call('/control/marketplaces/atlas/generate', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ orders: 8, updates: 2 }),
+    })
+    const body = (await response.json()) as {
+      orders: number
+      capacity: { max_orders: number; reached: boolean }
+      generated: { created: number; updated: number }
+    }
+    expect(body.generated).toEqual({ created: 5, updated: 2 })
+    expect(body.orders).toBe(5)
+    expect(body.capacity).toEqual({ max_orders: 5, reached: true })
+
+    const atlas = world.marketplaces.get('atlas')
+    expect(atlas?.generate(3, 1)).toEqual({ created: 0, updated: 1 })
+    atlas?.tick(60_000)
+    expect(atlas?.store.size).toBe(5)
   })
 
   it('resets to the seeded initial state', async () => {

@@ -86,4 +86,54 @@ test.describe('public surface', () => {
     expect((await request.get('/api/hub/_profiler')).status()).toBe(404)
     expect((await request.get('/api/hub/api/channels')).status()).toBe(200)
   })
+
+  test('pages ship a strict CSP, and the console runs within it', async ({ page, request }) => {
+    const violations: string[] = []
+    page.on('console', (message) => {
+      if (/Content Security Policy/i.test(message.text())) violations.push(message.text())
+    })
+    const response = await page.goto('/')
+    const headers = response?.headers() ?? {}
+    const policy = headers['content-security-policy'] ?? ''
+    expect(policy).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]{24}' 'strict-dynamic'/)
+    expect(policy).toContain("frame-ancestors 'none'")
+    expect(policy).not.toContain('unsafe-inline')
+    expect(headers['x-frame-options']).toBe('DENY')
+    expect(headers['x-content-type-options']).toBe('nosniff')
+    expect(headers['referrer-policy']).toBe('no-referrer')
+    expect(headers['x-powered-by']).toBeUndefined()
+
+    // Live data means the scripts ran under the policy.
+    await expect(page.getByText('live', { exact: true })).toBeVisible()
+    await expect(page.locator('#journal li[id^="entry-"]').first()).toBeVisible({ timeout: 30_000 })
+    expect(violations).toEqual([])
+
+    const again = (await request.get('/')).headers()['content-security-policy']
+    expect(again).toMatch(/'nonce-/)
+    expect(again).not.toBe(policy)
+  })
+
+  test('writes from another site and oversized bodies are refused', async ({ request }) => {
+    const replay = '/api/hub/api/failed-messages/replay'
+    const crossSite = await request.post(replay, { headers: { 'sec-fetch-site': 'cross-site' } })
+    expect(crossSite.status()).toBe(403)
+    const foreign = await request.post(replay, { headers: { origin: 'https://evil.example' } })
+    expect(foreign.status()).toBe(403)
+    const large = await request.post(replay, {
+      headers: { 'content-type': 'application/json' },
+      data: JSON.stringify({ padding: 'x'.repeat(20_000) }),
+    })
+    expect(large.status()).toBe(413)
+  })
+
+  test('costly actions are rate-limited', async ({ request }) => {
+    const statuses: number[] = []
+    for (let i = 0; i < 6; i += 1) statuses.push((await request.get('/api/consistency')).status())
+    expect(statuses).toContain(429)
+    const limited = await request.get('/api/consistency')
+    if (limited.status() === 429)
+      expect(Number(limited.headers()['retry-after'])).toBeGreaterThan(0)
+    // Leave the bucket full for the tests that follow.
+    await new Promise((resolve) => setTimeout(resolve, 10_000))
+  })
 })

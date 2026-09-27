@@ -15,7 +15,7 @@ import { RecentOrders } from './RecentOrders'
 const loadChannels = async () => (await api.channels()).channels
 const loadMarketplaces = async () => (await api.marketplaces()).marketplaces
 
-export function ControlRoom() {
+export function ControlRoom({ publicDemo = false }: { publicDemo?: boolean }) {
   const overview = usePolling(api.overview, 3000)
   const channels = usePolling(loadChannels, 3000)
   const marketplaces = usePolling(loadMarketplaces, 3000)
@@ -50,6 +50,12 @@ export function ControlRoom() {
             webhooks, late listings, quotas, outages. The journal shows every decision the hub
             takes; the exactly-once check proves nothing was lost or doubled.
           </p>
+          {publicDemo && (
+            <p className="mt-2 text-xs leading-5 text-faint">
+              Public demo: every visitor drives the same simulated marketplaces, actions are
+              rate-limited, and the whole system starts afresh at least once a day.
+            </p>
+          )}
         </div>
 
         <OverviewBar overview={overview.data} />
@@ -78,8 +84,10 @@ export function ControlRoom() {
         </div>
       </main>
       <footer className="mx-auto max-w-[1500px] px-4 pt-2 pb-8 text-xs text-faint sm:px-6">
-        Symfony 8 · API Platform · Messenger · PostgreSQL — Next.js console — TypeScript simulator —
-        Claude for incident analysis. Demo data only: no real merchant, order or buyer.
+        Symfony 8 · API Platform · Messenger ·{' '}
+        {publicDemo ? 'SQLite (PostgreSQL in production)' : 'PostgreSQL'} — Next.js console —
+        TypeScript simulator — Claude for incident analysis. Demo data only: no real merchant, order
+        or buyer.
       </footer>
     </>
   )

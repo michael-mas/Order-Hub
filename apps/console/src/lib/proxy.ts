@@ -1,9 +1,23 @@
 import 'server-only'
-import { isAllowed } from './routes'
-
-type Rules = Parameters<typeof isAllowed>[0]
+import { isCrossSite, readLimited } from './guard'
+import { createLimiter, limitsFromEnv, type Limit } from './limits'
+import { match, type Rule } from './routes'
 
 const TIMEOUT_MS = 70_000
+
+/** One set of buckets per console process: the public demo runs a single one. */
+const limiter = createLimiter(limitsFromEnv(process.env))
+
+/** A 429 when the given limit is spent, else null (and the token is taken). */
+export function throttle(limit: Limit): Response | null {
+  const wait = limiter.take(limit)
+  if (wait === 0) return null
+  const seconds = Math.max(1, Math.ceil(wait / 1000))
+  return Response.json(
+    { error: `The public demo limits this action. Try again in ${seconds} s.` },
+    { status: 429, headers: { 'retry-after': String(seconds) } },
+  )
+}
 
 /**
  * Relays an allowed call to an upstream service, server side: upstream URLs
@@ -12,11 +26,29 @@ const TIMEOUT_MS = 70_000
 export async function relay(
   request: Request,
   segments: string[],
-  options: { base: string; rules: Rules; headers?: Record<string, string> },
+  options: { base: string; rules: readonly Rule[]; headers?: Record<string, string> },
 ): Promise<Response> {
-  if (!isAllowed(options.rules, request.method, segments)) {
+  const rule = match(options.rules, request.method, segments)
+  if (rule === null) {
     return Response.json({ error: 'Not available from the console.' }, { status: 404 })
   }
+
+  let body = ''
+  if (request.method !== 'GET') {
+    if (isCrossSite(request)) {
+      return Response.json({ error: 'Cross-site request refused.' }, { status: 403 })
+    }
+    const text = await readLimited(request)
+    if (text === null) {
+      return Response.json({ error: 'Request body too large.' }, { status: 413 })
+    }
+    body = text
+  }
+  if (rule.limit !== undefined) {
+    const refused = throttle(rule.limit)
+    if (refused !== null) return refused
+  }
+
   const target = new URL(
     segments.join('/'),
     options.base.endsWith('/') ? options.base : `${options.base}/`,
@@ -29,12 +61,9 @@ export async function relay(
     cache: 'no-store',
     signal: AbortSignal.timeout(TIMEOUT_MS),
   }
-  if (request.method !== 'GET') {
-    const body = await request.text()
-    if (body !== '') {
-      init.body = body
-      init.headers = { ...init.headers, 'content-type': 'application/json' }
-    }
+  if (body !== '') {
+    init.body = body
+    init.headers = { ...init.headers, 'content-type': 'application/json' }
   }
 
   try {

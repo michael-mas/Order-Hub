@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { compare } from '@/lib/consistency'
-import { createCooldown } from '@/lib/cooldown'
+import { contentSecurityPolicy, createNonce } from '@/lib/csp'
+import { isCrossSite, readLimited } from '@/lib/guard'
 import type { JournalEntry } from '@/lib/hub'
 import { mergeJournal } from '@/lib/journal'
-import { HUB_ROUTES, isAllowed, SIMULATOR_ROUTES } from '@/lib/routes'
+import { createBucket, createLimiter, DEFAULT_LIMITS, limitsFromEnv } from '@/lib/limits'
+import { HUB_ROUTES, isAllowed, match, SIMULATOR_ROUTES } from '@/lib/routes'
 
 describe('proxy allowlist', () => {
   it.each([
@@ -131,14 +133,95 @@ describe('compare (exactly once)', () => {
   })
 })
 
-describe('createCooldown', () => {
-  it('allows one call per interval', () => {
+describe('rate limits', () => {
+  it('lets a burst through, then refills one token per interval', () => {
     let now = 0
-    const cooldown = createCooldown(1000, () => now)
-    expect(cooldown.take()).toBe(0)
+    const bucket = createBucket({ capacity: 2, refillMs: 1000 }, () => now)
+    expect(bucket.take()).toBe(0)
+    expect(bucket.take()).toBe(0)
+    expect(bucket.take()).toBe(1000)
     now = 400
-    expect(cooldown.take()).toBe(600)
+    expect(bucket.take()).toBe(600)
     now = 1000
-    expect(cooldown.take()).toBe(0)
+    expect(bucket.take()).toBe(0)
+    now = 60_000
+    expect(bucket.take()).toBe(0)
+    expect(bucket.take()).toBe(0)
+    expect(bucket.take()).toBeGreaterThan(0)
+  })
+
+  it('keeps one bucket per limit', () => {
+    const limiter = createLimiter(DEFAULT_LIMITS, () => 0)
+    expect(limiter.take('analysis')).toBe(0)
+    expect(limiter.take('analysis')).toBe(15_000)
+    expect(limiter.take('operation')).toBe(0)
+  })
+
+  it('bounds every write the console relays', () => {
+    const writes = [...HUB_ROUTES, ...SIMULATOR_ROUTES].filter((rule) => rule.method !== 'GET')
+    expect(writes.length).toBeGreaterThan(0)
+    for (const rule of writes) expect(rule.limit, String(rule.path)).toBeDefined()
+    expect(match(HUB_ROUTES, 'POST', 'api/incident-analyses'.split('/'))?.limit).toBe('analysis')
+    expect(
+      match(SIMULATOR_ROUTES, 'POST', 'control/marketplaces/nova/generate'.split('/'))?.limit,
+    ).toBe('generate')
+  })
+
+  it('reads the analysis interval from the environment, and nothing else', () => {
+    expect(limitsFromEnv({ ANALYSIS_COOLDOWN_MS: '0' }).analysis.refillMs).toBe(0)
+    expect(limitsFromEnv({ ANALYSIS_COOLDOWN_MS: 'soon' }).analysis).toEqual(
+      DEFAULT_LIMITS.analysis,
+    )
+    expect(limitsFromEnv({})).toEqual(DEFAULT_LIMITS)
+    const unlimited = createBucket({ capacity: 1, refillMs: 0 })
+    expect([unlimited.take(), unlimited.take()]).toEqual([0, 0])
+  })
+})
+
+const write = (headers: Record<string, string>, body?: string): Request =>
+  new Request('http://demo.example/api/hub/api/failed-messages/replay', {
+    method: 'POST',
+    headers: { host: 'demo.example', ...headers },
+    ...(body === undefined ? {} : { body }),
+  })
+
+describe('write guard', () => {
+  it('accepts same-origin writes and clients without browser headers', () => {
+    expect(isCrossSite(write({ 'sec-fetch-site': 'same-origin' }))).toBe(false)
+    expect(isCrossSite(write({ origin: 'http://demo.example' }))).toBe(false)
+    expect(isCrossSite(write({}))).toBe(false)
+  })
+
+  it('refuses writes another site makes the browser send', () => {
+    expect(isCrossSite(write({ 'sec-fetch-site': 'cross-site' }))).toBe(true)
+    expect(isCrossSite(write({ 'sec-fetch-site': 'same-site' }))).toBe(true)
+    expect(isCrossSite(write({ origin: 'https://evil.example' }))).toBe(true)
+    expect(isCrossSite(write({ origin: 'null' }))).toBe(true)
+  })
+
+  it('reads a small body and refuses a large one, declared or not', async () => {
+    expect(await readLimited(write({}, '{"a":1}'))).toBe('{"a":1}')
+    expect(await readLimited(write({}), 10)).toBe('')
+    expect(await readLimited(write({}, 'x'.repeat(11)), 10)).toBeNull()
+    expect(await readLimited(write({ 'content-length': '999999' }, '{}'), 10)).toBeNull()
+  })
+})
+
+describe('content security policy', () => {
+  it('allows only the nonce for scripts and styles, and no framing', () => {
+    const policy = contentSecurityPolicy('abc', { dev: false })
+    expect(policy).toContain("script-src 'self' 'nonce-abc' 'strict-dynamic'")
+    expect(policy).toContain("style-src 'self' 'nonce-abc'")
+    expect(policy).toContain("frame-ancestors 'none'")
+    expect(policy).toContain("object-src 'none'")
+    expect(policy).not.toContain('unsafe-inline')
+    expect(policy).not.toContain('unsafe-eval')
+    expect(contentSecurityPolicy('abc', { dev: true })).toContain("'unsafe-eval'")
+  })
+
+  it('draws a fresh 128-bit nonce each time', () => {
+    const nonces = new Set(Array.from({ length: 50 }, createNonce))
+    expect(nonces.size).toBe(50)
+    for (const nonce of nonces) expect(atob(nonce)).toHaveLength(16)
   })
 })
