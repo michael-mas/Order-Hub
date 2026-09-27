@@ -1,7 +1,18 @@
 api_platform:
-    title: Hello API Platform
+    title: Order Hub
+    description: Reliable, observable order ingestion from unruly marketplaces.
     version: 1.0.0
+    formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+    docs_formats:
+        jsonld: ['application/ld+json']
+        jsonopenapi: ['application/vnd.openapi+json']
+        html: ['text/html']
     defaults:
         stateless: true
+        pagination_items_per_page: 30
+        pagination_maximum_items_per_page: 100
+        pagination_client_items_per_page: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']

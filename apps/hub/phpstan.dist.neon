@@ -1,0 +1,14 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/bootstrap.php
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Overrides a private method of Symfony's KernelTrait, which calls it:
+        # invisible to static analysis, not dead code.
+        -
+            identifier: method.unused
+            path: src/Kernel.php

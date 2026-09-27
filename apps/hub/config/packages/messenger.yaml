@@ -1,22 +1,29 @@
 framework:
     messenger:
-        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
-        # failure_transport: failed
+        failure_transport: failed
 
         transports:
-            # https://symfony.com/doc/current/messenger.html#transport-configuration
-            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
-            # failed: 'doctrine://default?queue_name=failed'
-            sync: 'sync://'
+            # Doctrine transport on the application database: a message
+            # dispatched inside a Doctrine transaction is committed or rolled
+            # back with it, which makes the queue itself the outbox (ADR 0005).
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                retry_strategy:
+                    max_retries: 4
+                    delay: 1000
+                    multiplier: 3
+                    max_delay: 60000
+            failed: 'doctrine://default?queue_name=failed&auto_setup=0'
 
         routing:
-            # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            'App\Application\Message\IngestOrder': async
+            'App\Application\Message\AcknowledgeOrder': async
+            'App\Application\Message\PollChannel': async
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
-#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'
+                # Listable, unlike in-memory: the replay feature is tested for real.
+                failed: 'doctrine://default?queue_name=failed&auto_setup=0'

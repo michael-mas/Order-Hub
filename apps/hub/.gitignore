@@ -12,3 +12,4 @@
 # Generated assistant notes (not versioned)
 /AGENTS.md
 /CLAUDE.md
+.phpunit.cache/

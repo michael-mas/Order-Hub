@@ -1,0 +1,36 @@
+framework:
+    rate_limiter:
+        # The hub's own view of each marketplace plan: it spends at most this
+        # much, so the marketplace's 429 stays an exception, not a regulator.
+        marketplace_nova:
+            policy: token_bucket
+            limit: 8
+            rate: { interval: '1 second', amount: 4 }
+            cache_pool: cache.rate_limiter
+        marketplace_atlas:
+            policy: token_bucket
+            limit: 4
+            rate: { interval: '1 second', amount: 1 }
+            cache_pool: cache.rate_limiter
+
+    cache:
+        pools:
+            # Shared by every worker process through the database.
+            cache.rate_limiter:
+                adapter: cache.adapter.doctrine_dbal
+
+    http_client:
+        scoped_clients:
+            marketplace.client:
+                base_uri: '%env(MARKETPLACE_BASE_URL)%'
+                timeout: 10
+                max_duration: 15
+                headers:
+                    accept: application/json
+
+when@test:
+    framework:
+        cache:
+            pools:
+                cache.rate_limiter:
+                    adapter: cache.adapter.array

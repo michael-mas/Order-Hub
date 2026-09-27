@@ -1,0 +1,21 @@
+# Test doubles: time stands still, and no test ever reaches a real
+# marketplace or model.
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: true
+
+    Symfony\Component\Clock\MockClock:
+        arguments: ['2026-09-26 10:00:00', 'UTC']
+    Psr\Clock\ClockInterface: '@Symfony\Component\Clock\MockClock'
+    Symfony\Component\Clock\ClockInterface: '@Symfony\Component\Clock\MockClock'
+
+    App\Tests\Support\FakeMarketplace: ~
+    App\Application\MarketplaceClient: '@App\Tests\Support\FakeMarketplace'
+
+    App\Tests\Support\FakeRateLimiter: ~
+    App\Application\ChannelRateLimiter: '@App\Tests\Support\FakeRateLimiter'
+
+    App\Tests\Support\FakeCompletion: ~
+    App\Infrastructure\Ai\StructuredCompletion: '@App\Tests\Support\FakeCompletion'

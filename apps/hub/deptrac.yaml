@@ -1,0 +1,48 @@
+# Architecture rules, checked in CI: the domain knows no framework, the
+# application knows no infrastructure, and nothing depends on controllers.
+deptrac:
+  paths:
+    - ./src
+  layers:
+    - name: Domain
+      collectors:
+        - type: directory
+          value: src/Domain/.*
+    - name: Entity
+      collectors:
+        - type: directory
+          value: src/Entity/.*
+    - name: Application
+      collectors:
+        - type: directory
+          value: src/Application/.*
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: src/Infrastructure/.*
+    - name: Controller
+      collectors:
+        - type: directory
+          value: src/Controller/.*
+    - name: Framework
+      collectors:
+        - type: classLike
+          value: ^(Symfony|Doctrine|ApiPlatform|Anthropic)\\.*
+  ruleset:
+    Domain: ~
+    Entity:
+      - Framework
+    Application:
+      - Domain
+      - Entity
+      - Framework
+    Infrastructure:
+      - Application
+      - Domain
+      - Entity
+      - Framework
+    Controller:
+      - Application
+      - Domain
+      - Infrastructure
+      - Framework
