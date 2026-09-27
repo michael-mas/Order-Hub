@@ -49,7 +49,7 @@ export async function GET() {
     const hub: HubOrder[] = []
     for (let page = 1; page <= MAX_PAGES; page += 1) {
       const rows = hubPageSchema.parse(
-        await json(`${hubUrl()}/api/orders?itemsPerPage=${PAGE}&page=${page}`),
+        await json(`${hubUrl()}/api/orders?itemsPerPage=${PAGE}&page=${page}&order[id]=asc`),
       )
       hub.push(...rows)
       if (rows.length < PAGE) break

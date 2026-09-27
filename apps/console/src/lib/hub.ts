@@ -82,6 +82,8 @@ export const analysisSchema = z.object({
     z.object({ action: actionSchema, channel: z.string().nullable(), rationale: z.string() }),
   ),
   discarded: z.number(),
+  /** The journal entries the findings cite, even if no longer on screen. */
+  evidence: z.array(journalEntrySchema.omit({ context: true })),
 })
 export type Analysis = z.infer<typeof analysisSchema>
 

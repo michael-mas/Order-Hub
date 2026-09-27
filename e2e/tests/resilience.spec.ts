@@ -37,18 +37,30 @@ test('every order is stored and acknowledged exactly once after a storm', async 
   }
 
   let last: Consistency | null = null
+  // Polls until consistent; on timeout, the last divergence is the received value.
   await expect
     .poll(
       async () => {
         // An operator would press "Replay all"; so does the test.
         await request.post('/api/hub/api/failed-messages/replay')
         const response = await request.get('/api/consistency')
-        last = (await response.json()) as Consistency
-        return last.consistent
+        const report = (await response.json()) as Consistency
+        last = report
+        return report.consistent
+          ? 'consistent'
+          : JSON.stringify({
+              expected: report.expected,
+              stored: report.stored,
+              missing: report.missing.slice(0, 10),
+              behind: report.behind.slice(0, 10),
+              unacknowledged: report.unacknowledged.slice(0, 10),
+              wrongReference: report.wrongReference.slice(0, 10),
+              unexpected: report.unexpected.slice(0, 10),
+            })
       },
       { timeout: 5 * 60_000, intervals: [5_000] },
     )
-    .toBe(true)
+    .toBe('consistent')
 
   const result = last as unknown as Consistency
   test

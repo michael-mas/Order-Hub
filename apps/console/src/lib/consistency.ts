@@ -51,7 +51,7 @@ export function compare(truth: readonly TruthOrder[], hub: readonly HubOrder[]):
 
   return {
     expected: truth.length,
-    stored: hub.length,
+    stored: stored.size,
     missing,
     behind,
     unacknowledged,

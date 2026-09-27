@@ -14,6 +14,9 @@ test.describe('control room', () => {
   })
 
   test('has no serious accessibility violation', async ({ page }) => {
+    // Audit the settled page: new journal rows fade in, and a row caught
+    // mid-animation would be measured half transparent.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/')
     await expect(page.locator('#journal li[id^="entry-"]').first()).toBeVisible({ timeout: 30_000 })
 
@@ -59,10 +62,17 @@ test.describe('operations', () => {
     const analyst = page.locator('#analyst')
     await expect(analyst.getByText(/engine rules/)).toBeVisible()
 
+    // The cited entries come with the analysis, even once they have
+    // scrolled out of the live journal.
     const evidence = analyst.getByRole('button', { name: /Show evidence/ })
     if ((await evidence.count()) > 0) {
       await evidence.first().click()
-      await expect(page.locator('#journal li.ring-1').first()).toBeVisible()
+      await expect(
+        analyst
+          .getByRole('list', { name: /^Evidence for/ })
+          .getByRole('listitem')
+          .first(),
+      ).toBeVisible()
     }
   })
 })

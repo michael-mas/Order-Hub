@@ -23,11 +23,13 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\UniqueConstraint(name: 'orders_channel_external_id', columns: ['channel', 'external_id'])]
 #[ORM\Index(name: 'orders_last_changed_at', columns: ['last_changed_at'])]
 #[ApiResource(
-    operations: [new GetCollection(order: ['lastChangedAt' => 'DESC']), new Get()],
+    // The id (UUID v7, unique) breaks ties: without a total order, orders
+    // changed in the same second could repeat or vanish across pages.
+    operations: [new GetCollection(order: ['lastChangedAt' => 'DESC', 'id' => 'DESC']), new Get()],
     description: 'An order imported from a marketplace, at the highest version the hub has seen.',
 )]
 #[ApiFilter(SearchFilter::class, properties: ['channel' => 'exact', 'status' => 'exact', 'externalId' => 'exact'])]
-#[ApiFilter(OrderFilter::class, properties: ['lastChangedAt', 'externalUpdatedAt', 'totalMinor'])]
+#[ApiFilter(OrderFilter::class, properties: ['id', 'lastChangedAt', 'externalUpdatedAt', 'totalMinor'])]
 class Order
 {
     /**

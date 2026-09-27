@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application;
 
 use App\Domain\Channel\ChannelRegistry;
-use App\Domain\Incident\Analysis;
 use App\Domain\Incident\AnalysisSanitizer;
 use App\Domain\Incident\AnalystUnavailable;
 use App\Domain\Incident\IncidentContext;
@@ -43,7 +42,7 @@ class IncidentAnalyzer
     ) {
     }
 
-    public function analyze(): Analysis
+    public function analyze(): IncidentReport
     {
         $context = $this->context();
 
@@ -68,7 +67,7 @@ class IncidentAnalyzer
             'discarded' => $analysis->discarded,
         ]);
 
-        return $analysis;
+        return IncidentReport::of($analysis, $context->events);
     }
 
     public function context(): IncidentContext

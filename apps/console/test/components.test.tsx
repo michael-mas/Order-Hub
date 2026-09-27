@@ -39,6 +39,16 @@ describe('IncidentAnalyst', () => {
           { action: 'reconcile_channel', channel: 'atlas', rationale: 'Catch up.' },
         ],
         discarded: 1,
+        evidence: [
+          {
+            id: '12',
+            occurred_at: '2026-09-26T10:00:00Z',
+            channel: 'atlas',
+            type: 'channel.rate_limited',
+            severity: 'warning',
+            message: 'Quota exceeded.',
+          },
+        ],
       },
       '/api/hub/api/incident-analyses/actions': { status: 'done' },
     })
@@ -54,6 +64,12 @@ describe('IncidentAnalyst', () => {
 
     await user.click(screen.getByRole('button', { name: /Show evidence/ }))
     expect(onEvidence).toHaveBeenLastCalledWith(['12', '15'])
+    expect(
+      screen.getByRole('list', { name: 'Evidence for atlas hit its quota' }),
+    ).toHaveTextContent('Quota exceeded.')
+
+    await user.click(screen.getByRole('button', { name: /Hide evidence/ }))
+    expect(onEvidence).toHaveBeenLastCalledWith([])
 
     await user.click(screen.getByRole('button', { name: 'Run' }))
     expect(await screen.findByRole('button', { name: 'Done' })).toBeDisabled()

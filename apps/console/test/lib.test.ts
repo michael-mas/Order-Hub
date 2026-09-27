@@ -111,6 +111,16 @@ describe('compare (exactly once)', () => {
     expect(result.consistent).toBe(true)
   })
 
+  it('counts an order read twice (an unstable pagination) once', () => {
+    const order = { channel: 'nova', externalId: 'N-1', version: 1, id: 'u1' }
+    const result = compare(
+      [{ channel: 'nova', id: 'N-1', version: 1, acknowledgedRef: 'u1' }],
+      [order, order],
+    )
+    expect(result.stored).toBe(1)
+    expect(result.consistent).toBe(true)
+  })
+
   it('does not confuse the same id on two channels', () => {
     const result = compare(
       [{ channel: 'nova', id: 'X', version: 1, acknowledgedRef: 'u1' }],

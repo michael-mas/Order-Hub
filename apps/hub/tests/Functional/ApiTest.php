@@ -50,6 +50,25 @@ final class ApiTest extends ApiTestCase
         self::assertSame([], $this->json($this->request('GET', '/api/orders?channel=atlas')));
     }
 
+    public function testPaginatesWithoutRepeatingOrLosingOrdersChangedInTheSameSecond(): void
+    {
+        // The clock stands still: every order has the same lastChangedAt.
+        $ingestor = self::service(OrderIngestor::class);
+        foreach (['A-1', 'A-2', 'A-3', 'A-4', 'A-5'] as $id) {
+            $ingestor->ingest('atlas', Orders::payload($id), IngestionSource::Poll);
+        }
+
+        $seen = [];
+        for ($page = 1; $page <= 5; ++$page) {
+            foreach ($this->rows($this->request('GET', '/api/orders?itemsPerPage=1&page='.$page)) as $order) {
+                $seen[] = $order['externalId'] ?? null;
+            }
+        }
+
+        sort($seen);
+        self::assertSame(['A-1', 'A-2', 'A-3', 'A-4', 'A-5'], $seen);
+    }
+
     public function testChannelsCanBePausedAndResumed(): void
     {
         self::assertSame(202, $this->request('POST', '/api/channels/atlas/pause')->getStatusCode());
@@ -73,6 +92,7 @@ final class ApiTest extends ApiTestCase
         $analysis = $this->json($response);
         self::assertSame('rules', $analysis['engine']);
         self::assertSame('ok', $analysis['level']);
+        self::assertStringContainsString('"evidence":[]', (string) $response->getContent());
     }
 
     public function testRunsOnlyActionsFromTheClosedList(): void

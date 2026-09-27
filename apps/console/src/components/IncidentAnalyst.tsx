@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { time } from '@/lib/format'
 import { api } from '@/lib/client'
 import type { Action, Analysis } from '@/lib/hub'
-import { Panel } from './ui'
+import { Panel, SeverityBadge } from './ui'
 
 const LEVEL: Record<Analysis['level'], { label: string; className: string }> = {
   ok: { label: 'OK', className: 'border-accent/50 text-accent' },
@@ -30,6 +31,7 @@ export function IncidentAnalyst({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<Set<string>>(new Set())
+  const [opened, setOpened] = useState<number | null>(null)
 
   const analyse = async () => {
     setPending(true)
@@ -37,6 +39,7 @@ export function IncidentAnalyst({
     try {
       setAnalysis(await api.analyse())
       setDone(new Set())
+      setOpened(null)
       onEvidence([])
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Analysis unavailable')
@@ -101,11 +104,35 @@ export function IncidentAnalyst({
                     <p className="mt-1 leading-6 text-muted">{finding.explanation}</p>
                     <button
                       type="button"
+                      aria-expanded={opened === index}
                       className="mt-2 font-mono text-[11px] text-info underline-offset-4 hover:underline"
-                      onClick={() => onEvidence(finding.evidence)}
+                      onClick={() => {
+                        const open = opened === index ? null : index
+                        setOpened(open)
+                        onEvidence(open === null ? [] : finding.evidence)
+                      }}
                     >
-                      Show evidence: {finding.evidence.map((id) => `#${id}`).join(' ')}
+                      {opened === index ? 'Hide' : 'Show'} evidence:{' '}
+                      {finding.evidence.map((id) => `#${id}`).join(' ')}
                     </button>
+                    {opened === index && (
+                      <ul className="mt-2 space-y-1.5" aria-label={`Evidence for ${finding.title}`}>
+                        {analysis.evidence
+                          .filter((e) => finding.evidence.includes(e.id))
+                          .map((e) => (
+                            <li key={e.id} className="flex gap-2 text-xs">
+                              <span className="w-14 shrink-0 font-mono text-faint">
+                                {time(e.occurred_at)}
+                              </span>
+                              <SeverityBadge severity={e.severity} />
+                              <span className="min-w-0 text-muted">
+                                {e.message}{' '}
+                                <span className="font-mono text-[10px] text-faint">#{e.id}</span>
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>

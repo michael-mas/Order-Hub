@@ -13,7 +13,7 @@ final class IncidentAnalyzerTest extends DatabaseTestCase
 {
     public function testUsesTheRuleEngineWhenNoModelIsConfigured(): void
     {
-        $analysis = self::service(IncidentAnalyzer::class)->analyze();
+        $analysis = self::service(IncidentAnalyzer::class)->analyze()->analysis;
 
         self::assertSame('rules', $analysis->engine);
         self::assertSame('No model configured.', $analysis->fallbackReason);
@@ -47,7 +47,7 @@ final class IncidentAnalyzerTest extends DatabaseTestCase
             'recommendations' => [['action' => 'pause_channel', 'channel' => 'mars', 'rationale' => 'No such channel.']],
         ];
 
-        $analysis = self::service(IncidentAnalyzer::class)->analyze();
+        $analysis = self::service(IncidentAnalyzer::class)->analyze()->analysis;
 
         self::assertSame('claude:fake', $analysis->engine);
         self::assertSame(['Quota'], array_map(static fn ($f): string => $f->title, $analysis->findings));
@@ -55,12 +55,30 @@ final class IncidentAnalyzerTest extends DatabaseTestCase
         self::assertSame(2, $analysis->discarded);
     }
 
+    public function testShipsTheCitedEntriesWithTheAnalysis(): void
+    {
+        $throttle = self::service(Journal::class)->record(EventType::RateLimited, 'quota', 'nova');
+        $this->completion()->configured = true;
+        $this->completion()->answer = [
+            'level' => 'degraded',
+            'summary' => 'Nova is throttled.',
+            'findings' => [['title' => 'Quota', 'explanation' => 'Real.', 'evidence' => [$throttle]]],
+            'recommendations' => [],
+        ];
+
+        $report = self::service(IncidentAnalyzer::class)->analyze();
+
+        self::assertSame([$throttle], array_column($report->evidence, 'id'));
+        self::assertSame('quota', $report->evidence[0]['message'] ?? null);
+        self::assertArrayNotHasKey('context', $report->evidence[0] ?? []);
+    }
+
     public function testFallsBackToRulesWhenTheModelFails(): void
     {
         $this->completion()->configured = true;
         $this->completion()->answer = new AnalystUnavailable('The model could not be reached: timeout');
 
-        $analysis = self::service(IncidentAnalyzer::class)->analyze();
+        $analysis = self::service(IncidentAnalyzer::class)->analyze()->analysis;
 
         self::assertSame('rules', $analysis->engine);
         self::assertSame('The model could not be reached: timeout', $analysis->fallbackReason);

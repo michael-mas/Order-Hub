@@ -15,7 +15,7 @@
   par un humain (ADR 0004).
 - **Console** Next.js : journal en direct, pannes, opérations, rejeu,
   analyse, contrôle « exactement une fois » contre la vérité terrain.
-- **Preuves** : 97 tests PHPUnit, 33 Vitest sur le simulateur, 30 sur la
+- **Preuves** : 99 tests PHPUnit, 33 Vitest sur le simulateur, 31 sur la
   console, 12 Playwright (bureau et mobile, dont axe), un test de résilience
   sous tempête ; PHPStan niveau max, Deptrac, PHP-CS-Fixer, ESLint strict.
   CI : tout, plus la construction et le démarrage des images Docker.
@@ -34,6 +34,16 @@
   6. *Zones défilantes* inaccessibles au clavier (axe, mobile).
   7. *Messages anciens* dans la file d'échecs sans une propriété ajoutée
      depuis : la liste plantait. → lecture tolérante (`MessageDescription`).
+  8. *Pagination instable de `/api/orders`* : tri sur `lastChangedAt` seul,
+     à la seconde ; des commandes changées dans la même seconde pouvaient
+     apparaître deux fois ou disparaître d'une page à l'autre. Trouvé par le
+     test de résilience (184 lignes lues, 3 doublons, 3 absentes). → tri
+     total avec l'UUID v7 en départage ; test qui échoue sans le correctif.
+  9. *Preuves hors écran* : l'analyste pouvait citer des entrées plus
+     anciennes que celles chargées dans le journal. → l'analyse renvoie les
+     entrées citées, affichées dans chaque constat.
+  10. *Audit axe instable* : une ligne du journal mesurée en plein fondu.
+     → audit en mouvement réduit (l'état stable de la page).
 - **Mesure locale** : après une minute de `storm`, 180 commandes, toutes
   stockées une fois à leur dernière version et acquittées une fois ; 50
   webhooks en double et 11 versions périmées absorbés.
