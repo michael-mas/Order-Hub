@@ -27,7 +27,9 @@ d'un stockage partagé entre ses requêtes.
 ## Conséquences
 
 - Hébergement en une étape sur n'importe quel hôte de conteneurs ;
-  `render.yaml` pour Render.
+  `render.yaml` pour Render, sur son offre gratuite ; image publiée sur GHCR.
+- La tenue dans une petite instance gratuite (512 Mo, 0,1 CPU) est vérifiée
+  en CI à chaque commit.
 - La portabilité est prouvée, pas supposée : la suite PHPUnit tourne sur les
   deux bases en CI, et la suite de bout en bout (tempête comprise) tourne
   contre l'image de démo.

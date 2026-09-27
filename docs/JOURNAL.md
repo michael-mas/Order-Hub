@@ -4,6 +4,22 @@
 > Entrées les plus récentes en haut. L'historique du portfolio qui occupait ce
 > dépôt reste dans git (commit `90d44ec`, branche `feat/bootstrap`).
 
+## 2026-09-28 — hébergement sans abonnement supplémentaire
+
+- **Demande de Michael** : ne pas cumuler les abonnements ; son portfolio est
+  déjà sur Vercel.
+- **Décision** : la démo vise l'offre gratuite de Render (`plan: free` dans
+  `render.yaml`, 512 Mo, 0,1 CPU, mise en veille après 15 min sans visite) ;
+  le portfolio reste sur Vercel et renvoie vers la démo (lien, ou
+  sous-domaine en `CNAME`). L'image est aussi publiée sur GHCR
+  (`ghcr.io/michael-mas/order-hub-demo`, téléchargeable sans compte, vérifié)
+  pour tout autre hébergeur.
+- **Vérifié plutôt que supposé** : nouveau job CI qui démarre l'image avec
+  `--memory=512m --cpus=0.1`, chronomètre le démarrage et y joue la suite de
+  la console. Run 30 : sain en **25 s**, 6 tests verts, **187 Mio** sur 512.
+- **Reste** (jalon 8) : créer le service depuis le compte Render de Michael
+  (Blueprint), puis ajouter le lien sur le portfolio.
+
 ## 2026-09-28 — démo hébergeable sans base de données
 
 - **Demande de Michael** : une démo facile à héberger, qui montre ce qu'il

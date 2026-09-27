@@ -37,7 +37,7 @@ L'IA locale reste la piste du second projet (§ Suite).
 | 5 | Console Next.js : journal en direct, pannes, opérations, rejeu, diagnostic, contrôle « exactement une fois » | ✅ |
 | 6 | `compose.yaml`, CI, Playwright + accessibilité, test de résilience sous `storm`                     | ✅    |
 | 7 | Démo autonome hébergeable (image unique, SQLite éphémère, `render.yaml`)                            | ✅    |
-| 8 | Mise en ligne sur un hébergeur choisi par Michael                                                   | ⏳    |
+| 8 | Mise en ligne : offre gratuite Render (tenue en 512 Mo / 0,1 CPU vérifiée en CI), lien depuis le portfolio | ⏳ |
 
 Hors périmètre, assumé : authentification des marchands, multi-devise,
 back-office complet, paiement.

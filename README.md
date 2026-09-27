@@ -114,20 +114,48 @@ docker build -f docker/demo/Dockerfile -t order-hub-demo .
 docker run -p 3000:3000 order-hub-demo        # le port suit $PORT
 ```
 
-N'importe quel hébergeur qui lance une image Docker convient (Render avec le
-Blueprint [`render.yaml`](render.yaml), Railway, Koyeb, Fly.io…). La CI
-construit cette image, la démarre et joue contre elle toute la suite de bout
-en bout, tempête comprise, puis mesure la mémoire du conteneur (`docker stats`,
-job « Demo image ») : 226 Mio au premier relevé, après les deux suites. Pour que
-Claude rédige les analyses, définir `ANTHROPIC_API_KEY` ; sans clé, le moteur
-de règles répond.
+La CI construit cette image, la démarre et joue contre elle toute la suite de
+bout en bout, tempête comprise, puis mesure la mémoire du conteneur
+(`docker stats`, job « Demo image ») : 226 Mio au premier relevé, après les
+deux suites. Pour que Claude rédige les analyses, définir `ANTHROPIC_API_KEY` ;
+sans clé, le moteur de règles répond.
+
+#### Sans abonnement : l'offre gratuite de Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/michael-mas/Order-Hub)
+
+Le Blueprint [`render.yaml`](render.yaml) demande une instance gratuite
+(512 Mo, 0,1 CPU).
+
+1. Render → **New** → **Blueprint** → ce dépôt (ou le bouton ci-dessus) →
+   **Apply**. Render construit l'image et publie la démo sur une adresse
+   `*.onrender.com`.
+2. Facultatif : renseigner `ANTHROPIC_API_KEY` dans l'environnement du service.
+3. Facultatif : un sous-domaine (`demo.<domaine>`) : l'ajouter comme domaine
+   personnalisé du service Render, puis créer l'enregistrement `CNAME`
+   indiqué par Render chez le gestionnaire DNS du domaine.
+
+L'instance gratuite s'endort après 15 minutes sans visite ; la visite suivante
+la réveille et trouve une démo neuve. Que l'image tienne dans ces limites est
+vérifié, pas supposé : la CI la démarre avec `--memory=512m --cpus=0.1` et y
+joue la suite de la console (job « Demo image on a small free instance »).
+Premier relevé (run 30) : console, hub et simulateur sains 25 s après le
+`docker run`, les 6 tests de la console verts, 187 Mio de mémoire utilisés sur
+512. Au réveil sur Render s'ajoute le démarrage de l'instance elle-même, non
+mesuré ici.
+
+L'image est aussi publiée à chaque commit sur `main`, téléchargeable sans
+compte, pour tout hébergeur qui lance une image existante :
+
+```bash
+docker run -p 3000:3000 ghcr.io/michael-mas/order-hub-demo:latest
+```
 
 **Et Vercel ?** Vercel héberge très bien la console Next.js, mais pas le reste :
 le worker Messenger et le simulateur sont des processus qui tournent en
 continu, et le hub a besoin d'un stockage qui survive entre deux requêtes ;
-les fonctions serverless n'offrent ni l'un ni l'autre. Deux options : tout sur
-un hébergeur de conteneurs (le plus simple), ou la console sur Vercel
-(`HUB_URL`, `SIMULATOR_URL`) et l'image de démo ailleurs pour le reste.
+les fonctions serverless n'offrent ni l'un ni l'autre. Un site sur Vercel
+(un portfolio, par exemple) renvoie simplement vers la démo hébergée ailleurs.
 
 ### Scénario de démonstration
 
