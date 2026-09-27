@@ -20,61 +20,71 @@ final readonly class OrderStore implements \App\Application\OrderStore
     }
 
     /**
-     * One statement decides: insert, replace with a strictly newer version, or
-     * leave untouched. Concurrent deliveries of the same order (a webhook and a
-     * poll racing) serialize on the unique key, so no version can win twice
-     * and no older version can overwrite a newer one.
+     * Two conditional statements decide, each atomic on its own: insert if the
+     * order is new, otherwise replace it only with a strictly newer version.
+     * Concurrent deliveries of the same order (a webhook and a poll racing)
+     * serialize on the unique key, so no version can win twice and no older
+     * version can overwrite a newer one. Portable SQL: PostgreSQL and SQLite.
      */
     public function upsert(string $channel, ExternalOrder $order, IngestionSource $source, \DateTimeImmutable $now): UpsertResult
     {
-        $row = $this->connection->fetchAssociative(
+        $values = [
+            'channel' => $channel,
+            'external_id' => $order->externalId,
+            'status' => $order->status,
+            'currency' => $order->currency,
+            'total_minor' => $order->totalMinor,
+            'lines' => $order->linesAsArray(),
+            'buyer' => $order->buyerDisplayName,
+            'created_at' => $order->createdAt,
+            'updated_at' => $order->updatedAt,
+            'version' => $order->version,
+            'now' => $now,
+        ];
+        $types = [
+            'lines' => Types::JSON,
+            'created_at' => Types::DATETIME_IMMUTABLE,
+            'updated_at' => Types::DATETIME_IMMUTABLE,
+            'now' => Types::DATETIME_IMMUTABLE,
+        ];
+
+        $created = $this->connection->fetchOne(
             <<<'SQL'
                 INSERT INTO orders (id, channel, external_id, status, currency, total_minor, lines,
                                     buyer_display_name, external_created_at, external_updated_at, version,
                                     first_source, first_seen_at, last_changed_at, acknowledged_at)
                 VALUES (:id, :channel, :external_id, :status, :currency, :total_minor, :lines,
                         :buyer, :created_at, :updated_at, :version, :source, :now, :now, NULL)
-                ON CONFLICT (channel, external_id) DO UPDATE SET
-                    status = EXCLUDED.status,
-                    currency = EXCLUDED.currency,
-                    total_minor = EXCLUDED.total_minor,
-                    lines = EXCLUDED.lines,
-                    buyer_display_name = EXCLUDED.buyer_display_name,
-                    external_updated_at = EXCLUDED.external_updated_at,
-                    version = EXCLUDED.version,
-                    last_changed_at = EXCLUDED.last_changed_at
-                WHERE orders.version < EXCLUDED.version
-                RETURNING id, (xmax = 0) AS inserted
+                ON CONFLICT (channel, external_id) DO NOTHING
+                RETURNING id
                 SQL,
-            [
-                'id' => Uuid::v7()->toRfc4122(),
-                'channel' => $channel,
-                'external_id' => $order->externalId,
-                'status' => $order->status,
-                'currency' => $order->currency,
-                'total_minor' => $order->totalMinor,
-                'lines' => $order->linesAsArray(),
-                'buyer' => $order->buyerDisplayName,
-                'created_at' => $order->createdAt,
-                'updated_at' => $order->updatedAt,
-                'version' => $order->version,
-                'source' => $source->value,
-                'now' => $now,
-            ],
-            [
-                'lines' => Types::JSON,
-                'created_at' => Types::DATETIME_IMMUTABLE,
-                'updated_at' => Types::DATETIME_IMMUTABLE,
-                'now' => Types::DATETIME_IMMUTABLE,
-            ],
+            $values + ['id' => Uuid::v7()->toRfc4122(), 'source' => $source->value],
+            $types,
         );
+        if (false !== $created) {
+            return new UpsertResult(IngestionOutcome::Created, Row::scalarToString($created), $order->version);
+        }
 
-        if (false !== $row) {
-            $outcome = true === $row['inserted'] || 't' === $row['inserted'] || 1 === $row['inserted']
-                ? IngestionOutcome::Created
-                : IngestionOutcome::Updated;
-
-            return new UpsertResult($outcome, Row::string($row, 'id'), $order->version);
+        unset($values['created_at'], $types['created_at']);
+        $updated = $this->connection->fetchOne(
+            <<<'SQL'
+                UPDATE orders SET
+                    status = :status,
+                    currency = :currency,
+                    total_minor = :total_minor,
+                    lines = :lines,
+                    buyer_display_name = :buyer,
+                    external_updated_at = :updated_at,
+                    version = :version,
+                    last_changed_at = :now
+                WHERE channel = :channel AND external_id = :external_id AND version < :version
+                RETURNING id
+                SQL,
+            $values,
+            $types,
+        );
+        if (false !== $updated) {
+            return new UpsertResult(IngestionOutcome::Updated, Row::scalarToString($updated), $order->version);
         }
 
         // Nothing written: the stored version is at least as recent. It only

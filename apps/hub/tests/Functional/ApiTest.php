@@ -48,6 +48,8 @@ final class ApiTest extends ApiTestCase
         self::assertSame('NOVA-000007', $orders[0]['externalId'] ?? null);
         self::assertSame(2, $orders[0]['version'] ?? null);
         self::assertSame([], $this->json($this->request('GET', '/api/orders?channel=atlas')));
+        self::assertSame([], $this->json($this->request('GET', '/api/orders?status=shipped')));
+        self::assertCount(1, $this->json($this->request('GET', '/api/orders?externalId=NOVA-000007')));
     }
 
     public function testPaginatesWithoutRepeatingOrLosingOrdersChangedInTheSameSecond(): void
@@ -67,6 +69,12 @@ final class ApiTest extends ApiTestCase
 
         sort($seen);
         self::assertSame(['A-1', 'A-2', 'A-3', 'A-4', 'A-5'], $seen);
+
+        // Explicit sort on the time-ordered id, as the consistency check uses it.
+        $ascending = array_column($this->rows($this->request('GET', '/api/orders?order[id]=asc')), 'externalId');
+        self::assertSame(['A-1', 'A-2', 'A-3', 'A-4', 'A-5'], $ascending);
+        $descending = array_column($this->rows($this->request('GET', '/api/orders?order[id]=desc')), 'externalId');
+        self::assertSame(['A-5', 'A-4', 'A-3', 'A-2', 'A-1'], $descending);
     }
 
     public function testChannelsCanBePausedAndResumed(): void

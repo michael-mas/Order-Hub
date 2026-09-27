@@ -7,6 +7,7 @@ namespace App\Infrastructure\Marketplace;
 use App\Application\ChannelRateLimiter;
 use App\Domain\Channel\UnknownChannel;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
@@ -18,11 +19,13 @@ final readonly class SymfonyChannelRateLimiter implements ChannelRateLimiter
     private array $factories;
 
     public function __construct(
-        RateLimiterFactoryInterface $marketplaceNovaLimiter,
-        RateLimiterFactoryInterface $marketplaceAtlasLimiter,
+        #[Target('marketplace_nova')]
+        RateLimiterFactoryInterface $novaLimiter,
+        #[Target('marketplace_atlas')]
+        RateLimiterFactoryInterface $atlasLimiter,
         private ClockInterface $clock,
     ) {
-        $this->factories = ['nova' => $marketplaceNovaLimiter, 'atlas' => $marketplaceAtlasLimiter];
+        $this->factories = ['nova' => $novaLimiter, 'atlas' => $atlasLimiter];
     }
 
     public function acquire(string $channel): int

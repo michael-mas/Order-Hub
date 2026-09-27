@@ -10,6 +10,10 @@
 | `console`     | Next.js 16, React 19                                      | 3000 | salle de contrôle ; proxy serveur vers hub et simulateur |
 | `postgres`    | PostgreSQL 16                                             | 5432 | commandes, journal, file de messages, quotas          |
 
+La démo publique réunit ces services dans une seule image, sur un fichier
+SQLite éphémère au lieu de PostgreSQL ; seule la console y est exposée
+(ADR 0007, `docker/demo/`).
+
 ## Garanties et mécanismes
 
 1. **Exactement une fois, en effet.** Un événement webhook déjà vu (clé
@@ -98,6 +102,9 @@ POST /api/incident-analyses/actions  → seulement les actions de la liste ferm�
 ```
 
 ## Modèle de données
+
+Identique sur PostgreSQL et SQLite (schéma par les migrations ou par
+`doctrine:schema:create`).
 
 | Table              | Contenu                                                                 |
 | ------------------ | ----------------------------------------------------------------------- |

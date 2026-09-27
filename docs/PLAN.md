@@ -36,7 +36,8 @@ L'IA locale reste la piste du second projet (§ Suite).
 | 4 | Analyste d'incidents IA (Claude, sortie structurée, preuves vérifiées, repli à base de règles)      | ✅    |
 | 5 | Console Next.js : journal en direct, pannes, opérations, rejeu, diagnostic, contrôle « exactement une fois » | ✅ |
 | 6 | `compose.yaml`, CI, Playwright + accessibilité, test de résilience sous `storm`                     | ✅    |
-| 7 | Déploiement public de la démo                                                                        | ⏳    |
+| 7 | Démo autonome hébergeable (image unique, SQLite éphémère, `render.yaml`)                            | ✅    |
+| 8 | Mise en ligne sur un hébergeur choisi par Michael                                                   | ⏳    |
 
 Hors périmètre, assumé : authentification des marchands, multi-devise,
 back-office complet, paiement.

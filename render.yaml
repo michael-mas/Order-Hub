@@ -1,0 +1,14 @@
+# One-click deployment of the public demo on Render (Blueprint).
+# Everything runs in one container on an ephemeral SQLite database: no
+# database service to create, nothing to pay for storage.
+services:
+  - type: web
+    name: order-hub-demo
+    runtime: docker
+    dockerfilePath: ./docker/demo/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      # Optional: set it to let Claude write the incident analyses.
+      - key: ANTHROPIC_API_KEY
+        sync: false

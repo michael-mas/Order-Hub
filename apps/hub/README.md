@@ -1,7 +1,7 @@
 # Hub
 
 Le cœur d'Order Hub : Symfony 8.1, API Platform 4, Doctrine, Messenger,
-PostgreSQL 16. Il reçoit, déduplique, ordonne, stocke et acquitte les
+PostgreSQL 16 — ou SQLite pour la démo autonome (ADR 0007). Il reçoit, déduplique, ordonne, stocke et acquitte les
 commandes, et journalise chacune de ses décisions.
 
 ## Organisation
@@ -73,7 +73,10 @@ bin/console doctrine:migrations:migrate --env=test -n
 vendor/bin/phpunit                       # suites unit, integration, functional
 ```
 
-Les tests d'intégration et HTTP tournent sur PostgreSQL réel, chacun dans une
+Sur SQLite : `DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db`, puis
+`bin/console doctrine:schema:create --env=test` au lieu des migrations.
+
+Les tests d'intégration et HTTP tournent sur une vraie base (PostgreSQL ou SQLite), chacun dans une
 transaction annulée. Horloge, marketplace, limiteur et modèle sont remplacés
 par des doublures en environnement de test (`config/services_test.yaml`) :
 aucun test n'attend ni n'appelle le réseau.

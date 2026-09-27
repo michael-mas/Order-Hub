@@ -4,6 +4,29 @@
 > Entrées les plus récentes en haut. L'historique du portfolio qui occupait ce
 > dépôt reste dans git (commit `90d44ec`, branche `feat/bootstrap`).
 
+## 2026-09-28 — démo hébergeable sans base de données
+
+- **Demande de Michael** : une démo facile à héberger, qui montre ce qu'il
+  sait faire, sans base de données réelle ; « Vercel peut-il l'héberger ? »
+- **Décision** (ADR 0007) : SQL du hub rendu portable (PostgreSQL et SQLite),
+  image unique `docker/demo/` sur SQLite éphémère, seule la console exposée,
+  `render.yaml`. Vercel : oui pour la console seule ; non pour le worker, le
+  simulateur et le hub (processus continus, stockage partagé).
+- **Vérifié** : 99 tests PHPUnit verts sur PostgreSQL et sur SQLite ; la suite
+  de bout en bout (13 tests, tempête comprise) verte contre le script de démo
+  lancé en natif sur SQLite, sans aucune erreur de verrouillage ; en CI,
+  contre l'image elle-même.
+- **Mémoire mesurée en natif** (serveur PHP de développement à 5 processus) :
+  environ 480 Mo au total, dont console 100 Mo, simulateur 100 Mo, worker
+  55 Mo. L'image utilise FrankenPHP (un seul processus) ; la CI publie la
+  mesure du conteneur (`docker stats`).
+- **Corrigé en chemin** : identifiants UUID stockés en binaire hors
+  PostgreSQL (passés en `guid`) ; filtres `#[ApiFilter]` dépréciés par API
+  Platform 4.4 (remplacés par des paramètres de requête) ; limiteurs câblés
+  par nom de paramètre, déprécié par Symfony 8.1 (`#[Target]`) ;
+  `AGENTS.md` / `CLAUDE.md` générés par `next dev` avaient été commités dans
+  `apps/console` (retirés, ignorés).
+
 ## 2026-09-27 — le POC complet
 
 - **Hub** (Symfony 8.1, API Platform 4, Messenger, PostgreSQL) : webhooks

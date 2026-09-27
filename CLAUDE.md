@@ -39,7 +39,8 @@ PHP/Symfony + React/TypeScript, intégrations e-commerce). Plan et état :
 | `npm run build --workspace @order-hub/console`          | build de la console (requis par `e2e/stack.sh`)        |
 | `e2e/stack.sh start` / `stop`                           | système complet en natif, base dédiée `app_e2e`        |
 | `npx playwright test` (dans `e2e/`)                     | bout en bout, accessibilité, résilience (`STORM_MS`)   |
-| `docker compose up --build`                             | système complet en conteneurs                          |
+| `docker compose up --build`                             | système complet en conteneurs (PostgreSQL)             |
+| `docker build -f docker/demo/Dockerfile -t order-hub-demo .` | démo autonome, une image, SQLite éphémère          |
 | Hub : voir `apps/hub/README.md`                         | php-cs-fixer, phpstan, deptrac, migrations, phpunit    |
 
 Node 22 (`.nvmrc`), PHP 8.4, PostgreSQL 16. Playwright épinglé en 1.56.1
@@ -57,6 +58,8 @@ apps/console       Next.js 16 ; proxy serveur en liste blanche (src/lib/routes.t
 e2e                Playwright (console.spec, resilience.spec) ; stack.sh
 docs/              PLAN, ARCHITECTURE, adr/ (0001 → 0006), JOURNAL, console.png
 compose.yaml       postgres, migrate, hub, worker, marketplace, console
+docker/demo/       image unique de la démo publique + start.sh (testable en natif)
+render.yaml        Blueprint Render de la démo
 ```
 
 ## 5. Contraintes techniques
@@ -68,7 +71,10 @@ compose.yaml       postgres, migrate, hub, worker, marketplace, console
   Lectures de lignes SQL via `Row::string/int` (pas de cast silencieux).
 - Tout aléatoire du simulateur passe par `createRandom(seed)` ; trois flux
   séparés (commandes, pannes webhooks/visibilité, pannes API).
-- Hub : ordre des versions par `version` dans un seul upsert ; tout effet de
+- Hub : SQL portable PostgreSQL + SQLite (ADR 0007) — pas de `xmax`, pas de
+  type `uuid` Doctrine (binaire hors PostgreSQL : utiliser `guid`) ; la suite
+  PHPUnit tourne sur les deux (`DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db`).
+- Hub : ordre des versions par `version` dans des upserts conditionnels ; tout effet de
   bord dispatché dans la transaction de la décision (ADR 0005) ; points de
   reprise par page (ADR 0006) ; chaque décision journalisée.
 - Analyste IA : liste fermée d'actions, jamais exécutées sans humain ; preuves
@@ -99,4 +105,9 @@ compose.yaml       postgres, migrate, hub, worker, marketplace, console
   le lance) ; `next start` avertit en sortie `standalone` mais fonctionne.
 - Docker local derrière le proxy : `--secret id=extra_ca,src=<bundle CA>` pour
   les images Node ; l'image du hub ne se construit qu'en CI (Composer).
-- Symfony génère `AGENTS.md` / `CLAUDE.md` dans `apps/hub` : ignorés par git.
+- Symfony génère `AGENTS.md` / `CLAUDE.md` dans `apps/hub`, `next dev` dans
+  `apps/console` : ignorés par git, ne jamais les commiter.
+- `rm -rf chemin/*` après un `cd` est bloqué : vider les caches avec
+  `bin/console cache:clear`.
+- Démo en natif : `HUB_DIR=… SIMULATOR_DIR=… CONSOLE_SERVER=…/standalone/apps/console/server.js
+  DATA_DIR=… docker/demo/start.sh` (copier `.next/static` dans la sortie standalone).

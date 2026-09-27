@@ -71,7 +71,7 @@ responsabilité, conteneurs configurés par l'environnement.
 
 | Composant                               | Rôle                                                                                                | Pile                                                              |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [`apps/hub`](apps/hub/)                 | Ingestion, file de messages, API d'exploitation, analyste d'incidents                               | PHP 8.4, Symfony 8.1, API Platform 4, Doctrine, Messenger, PostgreSQL |
+| [`apps/hub`](apps/hub/)                 | Ingestion, file de messages, API d'exploitation, analyste d'incidents                               | PHP 8.4, Symfony 8.1, API Platform 4, Doctrine, Messenger ; PostgreSQL ou SQLite (démo) |
 | [`apps/marketplace`](apps/marketplace/) | Deux marketplaces simulées, pannes réglables, déterministes à partir d'une graine                   | Node 22, TypeScript, Hono, zod                                    |
 | [`apps/console`](apps/console/)         | Salle de contrôle : journal en direct, pannes, opérations, rejeu, analyse, contrôle « exactement une fois » | Next.js 16, React 19, Tailwind 4                              |
 | [`e2e`](e2e/)                           | Bout en bout, accessibilité, résilience                                                             | Playwright, axe                                                   |
@@ -100,6 +100,33 @@ e2e/stack.sh start        # simulateur, hub, worker, console ; base dédiée app
 ```
 
 `e2e/stack.sh stop` arrête tout.
+
+### Héberger la démo publique
+
+Une seule image, sans base de données à provisionner : le hub, son worker, le
+simulateur et la console tournent ensemble sur un fichier SQLite éphémère,
+recréé à chaque démarrage (et au plus tard toutes les 24 h,
+`DEMO_RESET_AFTER_HOURS`). Seule la console est exposée ; elle parle au hub et
+au simulateur en local, à travers sa liste blanche.
+
+```bash
+docker build -f docker/demo/Dockerfile -t order-hub-demo .
+docker run -p 3000:3000 order-hub-demo        # le port suit $PORT
+```
+
+N'importe quel hébergeur qui lance une image Docker convient (Render avec le
+Blueprint [`render.yaml`](render.yaml), Railway, Koyeb, Fly.io…). La CI
+construit cette image, la démarre et joue contre elle toute la suite de bout
+en bout, tempête comprise ; elle affiche aussi la mémoire consommée. Pour que
+Claude rédige les analyses, définir `ANTHROPIC_API_KEY` ; sans clé, le moteur
+de règles répond.
+
+**Et Vercel ?** Vercel héberge très bien la console Next.js, mais pas le reste :
+le worker Messenger et le simulateur sont des processus qui tournent en
+continu, et le hub a besoin d'un stockage qui survive entre deux requêtes ;
+les fonctions serverless n'offrent ni l'un ni l'autre. Deux options : tout sur
+un hébergeur de conteneurs (le plus simple), ou la console sur Vercel
+(`HUB_URL`, `SIMULATOR_URL`) et l'image de démo ailleurs pour le reste.
 
 ### Scénario de démonstration
 
@@ -132,7 +159,7 @@ Décision complète : [ADR 0004](docs/adr/0004-analyste-ia-encadre.md).
 | ------------------------- | ------------------------------------------------- | ----------------------------------------------- |
 | Unitaire                  | PHPUnit, Vitest                                   | hub, simulateur, console                        |
 | Propriétés                | fast-check                                        | simulateur (quota, pagination, signature)       |
-| Intégration               | PHPUnit sur PostgreSQL réel, transaction annulée  | hub (upsert, file d'échecs, polling)            |
+| Intégration               | PHPUnit sur PostgreSQL **et** SQLite réels, transaction annulée | hub (upsert, file d'échecs, polling) |
 | HTTP                      | noyau Symfony, `app.request` de Hono              | hub, simulateur                                 |
 | Composants                | Testing Library                                   | console                                         |
 | Bout en bout              | Playwright, bureau et mobile                      | système complet                                 |
@@ -141,8 +168,9 @@ Décision complète : [ADR 0004](docs/adr/0004-analyste-ia-encadre.md).
 | Architecture              | Deptrac (le domaine ignore le framework)          | hub                                             |
 | Analyse statique et style | PHPStan niveau max, PHP-CS-Fixer, TypeScript strict, ESLint | partout                               |
 
-Tout tourne en CI à chaque commit, y compris la construction et le démarrage
-des images Docker.
+Tout tourne en CI à chaque commit : la suite du hub sur les deux bases, la
+construction et le démarrage des images Docker, et la suite de bout en bout
+deux fois, contre la pile PostgreSQL et contre l'image de démo SQLite.
 
 ## Documentation
 
@@ -152,6 +180,7 @@ des images Docker.
 - [`docs/JOURNAL.md`](docs/JOURNAL.md) — journal daté, défauts trouvés compris
 - [`apps/marketplace/README.md`](apps/marketplace/README.md) — API du simulateur
 - [`apps/hub/README.md`](apps/hub/README.md) — API du hub, exploitation
+- [`docker/demo/`](docker/demo/) — image et script de la démo autonome
 
 Données de démonstration uniquement : aucun marchand, aucune commande, aucun
 acheteur réel.

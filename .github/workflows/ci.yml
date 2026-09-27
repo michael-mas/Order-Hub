@@ -25,8 +25,15 @@ jobs:
       - run: npm run build --workspace @order-hub/console
 
   hub:
-    name: Hub (PHP)
+    name: Hub (PHP, ${{ matrix.database }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # PostgreSQL for deployments, SQLite for the self-contained demo.
+        database: [postgresql, sqlite]
+    env:
+      DATABASE_URL: ${{ matrix.database == 'sqlite' && 'sqlite:///%kernel.project_dir%/var/ci.db' || 'postgresql://app:app@127.0.0.1:5432/app?serverVersion=16&charset=utf8' }}
     defaults:
       run:
         working-directory: apps/hub
@@ -57,15 +64,24 @@ jobs:
           key: composer-${{ hashFiles('apps/hub/composer.lock') }}
       - run: composer install --no-interaction --no-progress
       - run: composer validate --strict --no-check-publish
-      - run: vendor/bin/php-cs-fixer fix --dry-run --diff
-      - run: vendor/bin/phpstan analyse --no-progress
-      - run: vendor/bin/deptrac analyse --no-progress
+      - if: matrix.database == 'postgresql'
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+      - if: matrix.database == 'postgresql'
+        run: vendor/bin/phpstan analyse --no-progress
+      - if: matrix.database == 'postgresql'
+        run: vendor/bin/deptrac analyse --no-progress
       - run: bin/console lint:container
       - run: bin/console lint:yaml config
-      - name: Database
+      - name: Database (PostgreSQL, through the migrations)
+        if: matrix.database == 'postgresql'
         run: |
           bin/console doctrine:database:create --env=test --if-not-exists
           bin/console doctrine:migrations:migrate --env=test --no-interaction
+          bin/console doctrine:schema:validate --env=test
+      - name: Database (SQLite, as the demo creates it)
+        if: matrix.database == 'sqlite'
+        run: |
+          bin/console doctrine:schema:create --env=test
           bin/console doctrine:schema:validate --env=test
       - run: vendor/bin/phpunit
 
@@ -138,3 +154,34 @@ jobs:
         run: docker compose logs
       - if: always()
         run: docker compose down -v
+
+  demo:
+    name: Demo image (SQLite, single container)
+    needs: [node, hub]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: docker build -f docker/demo/Dockerfile -t order-hub-demo .
+      - name: Start the demo exactly as a host would
+        run: |
+          docker run -d --name demo -p 3000:3000 -p 8100:8100 -e PORT=3000 order-hub-demo
+          for i in $(seq 1 90); do curl -fs http://127.0.0.1:3000/api/health && break; sleep 2; done
+          curl -fsS http://127.0.0.1:3000/api/health
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - name: End to end and resilience, against the demo container
+        run: npx playwright test
+        working-directory: e2e
+        env:
+          STORM_MS: '60000'
+      - name: Memory used by the whole demo after the suites
+        run: docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' demo
+      - if: failure()
+        run: docker logs demo
+      - if: always()
+        run: docker rm -f demo

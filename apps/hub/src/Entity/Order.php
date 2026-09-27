@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Doctrine\Orm\Filter\ExactFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SortFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Uid\Uuid;
 
 /**
  * Read model of an imported order. Rows are written by {@see \App\Infrastructure\Persistence\OrderStore}
@@ -25,20 +24,33 @@ use Symfony\Component\Uid\Uuid;
 #[ApiResource(
     // The id (UUID v7, unique) breaks ties: without a total order, orders
     // changed in the same second could repeat or vanish across pages.
-    operations: [new GetCollection(order: ['lastChangedAt' => 'DESC', 'id' => 'DESC']), new Get()],
+    operations: [
+        new GetCollection(
+            order: ['lastChangedAt' => 'DESC', 'id' => 'DESC'],
+            parameters: [
+                'channel' => new QueryParameter(filter: new ExactFilter(), property: 'channel'),
+                'status' => new QueryParameter(filter: new ExactFilter(), property: 'status'),
+                'externalId' => new QueryParameter(filter: new ExactFilter(), property: 'externalId'),
+                'order[:property]' => new QueryParameter(
+                    filter: new SortFilter(),
+                    properties: ['id', 'lastChangedAt', 'externalUpdatedAt', 'totalMinor'],
+                ),
+            ],
+        ),
+        new Get(),
+    ],
     description: 'An order imported from a marketplace, at the highest version the hub has seen.',
 )]
-#[ApiFilter(SearchFilter::class, properties: ['channel' => 'exact', 'status' => 'exact', 'externalId' => 'exact'])]
-#[ApiFilter(OrderFilter::class, properties: ['id', 'lastChangedAt', 'externalUpdatedAt', 'totalMinor'])]
 class Order
 {
     /**
      * @param list<array{sku: string, title: string, quantity: int, unit_price_minor: int}> $lines
      */
     public function __construct(
+        /** UUID v7, as text: native UUID on PostgreSQL, CHAR(36) on SQLite. */
         #[ORM\Id]
-        #[ORM\Column(type: 'uuid')]
-        private Uuid $id,
+        #[ORM\Column(type: Types::GUID)]
+        private string $id,
         #[ORM\Column(length: 32)]
         private string $channel,
         #[ORM\Column(length: 64)]
@@ -70,7 +82,7 @@ class Order
     ) {
     }
 
-    public function getId(): Uuid
+    public function getId(): string
     {
         return $this->id;
     }
