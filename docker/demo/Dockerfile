@@ -12,7 +12,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 COPY apps/hub/ ./
 RUN composer dump-autoload --classmap-authoritative --no-dev && rm -f .env.dev .env.test
 
-FROM node:22-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS simulator
+FROM node:26-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS simulator
 WORKDIR /build
 COPY package.json package-lock.json ./
 COPY apps/marketplace/package.json apps/marketplace/
@@ -23,7 +23,7 @@ RUN --mount=type=secret,id=extra_ca,required=false \
     NODE_EXTRA_CA_CERTS=/run/secrets/extra_ca npm ci --workspace @order-hub/marketplace --omit=dev --no-audit --no-fund
 COPY apps/marketplace apps/marketplace
 
-FROM node:22-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS console
+FROM node:26-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS console
 WORKDIR /build
 COPY package.json package-lock.json ./
 COPY apps/marketplace/package.json apps/marketplace/
