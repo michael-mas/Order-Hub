@@ -19,6 +19,7 @@ framework:
             'App\Application\Message\IngestOrder': async
             'App\Application\Message\AcknowledgeOrder': async
             'App\Application\Message\PollChannel': async
+            'App\Application\Message\ApplyRetention': async
 
 when@test:
     framework:

@@ -12,6 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ORM\Entity(readOnly: true)]
 #[ORM\Table(name: 'webhook_events')]
+#[ORM\Index(name: 'webhook_events_received_at', columns: ['received_at'])]
 class WebhookEvent
 {
     public function __construct(

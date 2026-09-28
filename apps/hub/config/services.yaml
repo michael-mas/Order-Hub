@@ -40,6 +40,11 @@ services:
         arguments:
             $channels: ['@app.channel.nova', '@app.channel.atlas']
 
+    App\Application\DataRetention:
+        arguments:
+            $journalDays: '%env(int:JOURNAL_RETENTION_DAYS)%'
+            $webhookEventDays: '%env(int:WEBHOOK_EVENT_RETENTION_DAYS)%'
+
     App\Domain\Channel\PollingWindow:
         arguments:
             # Covers the simulator's worst visibility delay (20 s in "storm").

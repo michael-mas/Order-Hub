@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Messenger;
 
+use App\Application\Message\ApplyRetention;
 use App\Application\Message\PollChannel;
 use App\Domain\Channel\ChannelRegistry;
 use App\Domain\Channel\PollMode;
@@ -29,6 +30,7 @@ final class HubSchedule implements ScheduleProviderInterface
     public function getSchedule(): Schedule
     {
         $schedule = new Schedule();
+        $schedule->add(RecurringMessage::every('1 hour', new ApplyRetention()));
         foreach ($this->channels->all() as $channel) {
             $schedule->add(
                 RecurringMessage::every(\sprintf('%d seconds', $channel->pollIntervalSeconds), new PollChannel($channel->code, PollMode::Window)),

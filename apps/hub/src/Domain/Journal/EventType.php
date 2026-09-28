@@ -37,12 +37,14 @@ enum EventType: string
 
     case AnalysisProduced = 'analysis.produced';
 
+    case RetentionApplied = 'retention.applied';
+
     public function severity(): Severity
     {
         return match ($this) {
             self::OrderCreated, self::OrderUpdated, self::OrderUnchanged, self::WebhookDuplicate,
             self::PollCompleted, self::ChannelResumed, self::ReconcileRequested,
-            self::AckSent, self::MessageReplayed, self::AnalysisProduced => Severity::Info,
+            self::AckSent, self::MessageReplayed, self::AnalysisProduced, self::RetentionApplied => Severity::Info,
             self::OrderStale, self::RateLimited, self::LocalQuotaReached, self::ChannelPaused,
             self::MessageRetrying => Severity::Warning,
             self::OrderInvalid, self::WebhookRejected, self::PollFailed, self::AckConflict,

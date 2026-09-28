@@ -29,6 +29,7 @@ class IncidentAnalyzer
         EventType::AckSent,
         EventType::PollCompleted,
         EventType::AnalysisProduced,
+        EventType::RetentionApplied,
     ];
 
     public function __construct(
