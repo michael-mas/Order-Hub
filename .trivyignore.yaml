@@ -1,0 +1,12 @@
+# Findings accepted after review, each with its reason and an expiry date:
+# once expired, the finding fails the build again and is reviewed anew.
+vulnerabilities:
+  - id: GHSA-r277-6w6q-xmqw
+    paths:
+      - usr/local/bin/frankenphp
+    statement: >-
+      kin-openapi inside the upstream FrankenPHP binary (a Caddy module). The
+      flaw is in OpenAPI request validation, which this project never
+      configures; in the demo, the hub listens on 127.0.0.1 only. Fixed when
+      FrankenPHP ships a rebuilt binary (Dependabot tracks the base image).
+    expired_at: 2026-12-31

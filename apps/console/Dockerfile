@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Build context: the repository root (npm workspaces share one lockfile).
+# Base image pinned by digest; Dependabot proposes the updates.
 
-FROM node:22-slim AS build
+FROM node:22-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/marketplace/package.json apps/marketplace/
@@ -13,11 +14,14 @@ RUN --mount=type=secret,id=extra_ca,required=false \
 COPY apps/console apps/console
 RUN npm run build --workspace @order-hub/console
 
-FROM node:22-slim
+FROM node:22-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 COPY --from=build /app/apps/console/.next/standalone ./
 COPY --from=build /app/apps/console/.next/static ./apps/console/.next/static
-USER node
+# The server needs node alone: npm and its dependencies leave the image.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+# node, by id: a numeric user satisfies runAsNonRoot checks.
+USER 1000:1000
 EXPOSE 3000
 CMD ["node", "apps/console/server.js"]
