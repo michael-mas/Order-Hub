@@ -48,8 +48,8 @@ when@prod:
                 type: console
                 process_psr_3_messages: false
                 channels: ["!event", "!doctrine"]
+            # Deprecations are for development and CI, where they are shown and
+            # fixed; in production they would flood the log on every request.
             deprecation:
-                type: stream
+                type: 'null'
                 channels: [deprecation]
-                path: php://stderr
-                formatter: monolog.formatter.json

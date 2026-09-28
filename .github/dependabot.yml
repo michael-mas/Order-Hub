@@ -1,14 +1,22 @@
-# Weekly update proposals; each one goes through the whole CI.
+# Weekly update proposals; each one goes through the whole CI. Major
+# versions (Node, PostgreSQL, frameworks) are a deliberate decision, not a
+# weekly chore: they are not proposed.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule: { interval: weekly }
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
     groups:
       npm: { patterns: ['*'], update-types: [minor, patch] }
   - package-ecosystem: composer
     directory: /apps/hub
     schedule: { interval: weekly }
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
     groups:
       composer: { patterns: ['*'], update-types: [minor, patch] }
   - package-ecosystem: github-actions
@@ -17,6 +25,12 @@ updates:
   - package-ecosystem: docker
     directories: [/apps/hub, /apps/console, /apps/marketplace, /docker/demo]
     schedule: { interval: weekly }
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
   - package-ecosystem: docker-compose
     directory: /
     schedule: { interval: weekly }
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]
