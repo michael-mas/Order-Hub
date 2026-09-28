@@ -8,6 +8,10 @@ import { expect, test } from '@playwright/test'
  */
 const SIMULATOR = 'http://127.0.0.1:8100'
 const STORM_MS = Number(process.env.STORM_MS ?? 60_000)
+/** The simulator's control plane, reached directly: it wants its token. */
+const CONTROL: Record<string, string> = process.env.SIMULATOR_CONTROL_TOKEN
+  ? { 'x-control-token': process.env.SIMULATOR_CONTROL_TOKEN }
+  : {}
 
 interface Consistency {
   expected: number
@@ -25,13 +29,20 @@ test('every order is stored and acknowledged exactly once after a storm', async 
 
   for (const channel of ['nova', 'atlas']) {
     expect(
-      (await request.put(`${SIMULATOR}/control/marketplaces/${channel}/preset/storm`)).ok(),
+      (
+        await request.put(`${SIMULATOR}/control/marketplaces/${channel}/preset/storm`, {
+          headers: CONTROL,
+        })
+      ).ok(),
     ).toBe(true)
   }
   await new Promise((resolve) => setTimeout(resolve, STORM_MS))
   for (const channel of ['nova', 'atlas']) {
-    await request.put(`${SIMULATOR}/control/marketplaces/${channel}/preset/calm`)
+    await request.put(`${SIMULATOR}/control/marketplaces/${channel}/preset/calm`, {
+      headers: CONTROL,
+    })
     await request.patch(`${SIMULATOR}/control/marketplaces/${channel}/chaos`, {
+      headers: CONTROL,
       data: { generation: { ordersPerMinute: 0, updatesPerMinute: 0 } },
     })
   }

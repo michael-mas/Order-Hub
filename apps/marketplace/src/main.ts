@@ -24,6 +24,8 @@ setInterval(() => {
 }, TICK_MS)
 
 const port = Number(env('PORT', '8100'))
-serve({ fetch: world.app.fetch, port }, () => {
-  console.log(`marketplace simulator listening on :${port}`)
+// 127.0.0.1 when only local services may reach the simulator (the public demo).
+const hostname = env('HOST', '0.0.0.0')
+serve({ fetch: world.app.fetch, port, hostname }, () => {
+  console.log(`marketplace simulator listening on ${hostname}:${port}`)
 })

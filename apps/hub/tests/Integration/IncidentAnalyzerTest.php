@@ -73,6 +73,25 @@ final class IncidentAnalyzerTest extends DatabaseTestCase
         self::assertArrayNotHasKey('context', $report->evidence[0] ?? []);
     }
 
+    public function testStopsCallingTheModelOnceTheDailyBudgetIsSpent(): void
+    {
+        $this->completion()->configured = true;
+        $this->completion()->answer = ['level' => 'ok', 'summary' => 'Calm.', 'findings' => [], 'recommendations' => []];
+        $analyzer = self::service(IncidentAnalyzer::class);
+
+        // MODEL_DAILY_ANALYSES=2 in .env.test.
+        $engines = [];
+        foreach (range(1, 3) as $ignored) {
+            $engines[] = $analyzer->analyze()->analysis->engine;
+        }
+        $afterwards = $analyzer->analyze()->analysis;
+
+        self::assertSame(['claude:fake', 'claude:fake', 'rules'], $engines);
+        self::assertSame('rules', $afterwards->engine);
+        self::assertSame("Today's budget of 2 model analyses is spent.", $afterwards->fallbackReason);
+        self::assertCount(2, $this->completion()->requests);
+    }
+
     public function testFallsBackToRulesWhenTheModelFails(): void
     {
         $this->completion()->configured = true;

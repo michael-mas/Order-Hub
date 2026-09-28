@@ -78,6 +78,9 @@ export async function relay(
 }
 
 export const hubUrl = (): string => process.env.HUB_URL ?? 'http://127.0.0.1:8000'
+/** The hub's operations API wants its service token; the browser never sees it. */
+export const hubHeaders = (): Record<string, string> =>
+  process.env.HUB_API_TOKEN ? { authorization: `Bearer ${process.env.HUB_API_TOKEN}` } : {}
 export const simulatorUrl = (): string => process.env.SIMULATOR_URL ?? 'http://127.0.0.1:8100'
 export const simulatorHeaders = (): Record<string, string> =>
   process.env.SIMULATOR_CONTROL_TOKEN

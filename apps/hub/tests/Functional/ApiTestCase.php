@@ -13,11 +13,16 @@ use Symfony\Component\HttpFoundation\Response;
  */
 abstract class ApiTestCase extends DatabaseTestCase
 {
+    public const string TOKEN = 'test-api-token';
+
     /**
+     * Sends the service token unless the headers set `Authorization` themselves.
+     *
      * @param array<string, string> $headers
      */
     protected function request(string $method, string $uri, ?string $body = null, array $headers = []): Response
     {
+        $headers += ['Authorization' => 'Bearer '.self::TOKEN];
         $server = ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'];
         foreach ($headers as $name => $value) {
             $server['HTTP_'.strtoupper(str_replace('-', '_', $name))] = $value;

@@ -1218,34 +1218,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     },
  *     ...<string, mixed>
  * }
- * @psalm-type NelmioCorsConfig = array{
- *     defaults?: array{
- *         allow_credentials?: bool|Param, // Default: false
- *         allow_origin?: list<scalar|Param|null>,
- *         allow_headers?: list<scalar|Param|null>,
- *         allow_methods?: list<scalar|Param|null>,
- *         allow_private_network?: bool|Param, // Default: false
- *         expose_headers?: list<scalar|Param|null>,
- *         max_age?: scalar|Param|null, // Default: 0
- *         hosts?: list<scalar|Param|null>,
- *         origin_regex?: bool|Param, // Default: false
- *         forced_allow_origin_value?: scalar|Param|null, // Default: null
- *         skip_same_as_origin?: bool|Param, // Default: true
- *     },
- *     paths?: array<string, array{ // Default: []
- *         allow_credentials?: bool|Param,
- *         allow_origin?: list<scalar|Param|null>,
- *         allow_headers?: list<scalar|Param|null>,
- *         allow_methods?: list<scalar|Param|null>,
- *         allow_private_network?: bool|Param,
- *         expose_headers?: list<scalar|Param|null>,
- *         max_age?: scalar|Param|null, // Default: 0
- *         hosts?: list<scalar|Param|null>,
- *         origin_regex?: bool|Param,
- *         forced_allow_origin_value?: scalar|Param|null, // Default: null
- *         skip_same_as_origin?: bool|Param,
- *     }>,
- * }
  * @psalm-type MonologConfig = array{
  *     use_microseconds?: scalar|Param|null, // Default: true
  *     timezone?: string|Param, // The timezone used for the timestamp of every log record (e.g. "UTC" or "Europe/Paris"). Defaults to the PHP default timezone. // Default: null
@@ -1404,7 +1376,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     doctrine?: DoctrineConfig,
  *     doctrine_migrations?: DoctrineMigrationsConfig,
  *     api_platform?: ApiPlatformConfig,
- *     nelmio_cors?: NelmioCorsConfig,
  *     monolog?: MonologConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
@@ -1414,7 +1385,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         api_platform?: ApiPlatformConfig,
- *         nelmio_cors?: NelmioCorsConfig,
  *         monolog?: MonologConfig,
  *     },
  *     "when@prod"?: array{
@@ -1425,7 +1395,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         api_platform?: ApiPlatformConfig,
- *         nelmio_cors?: NelmioCorsConfig,
  *         monolog?: MonologConfig,
  *     },
  *     "when@test"?: array{
@@ -1436,7 +1405,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         api_platform?: ApiPlatformConfig,
- *         nelmio_cors?: NelmioCorsConfig,
  *         monolog?: MonologConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias

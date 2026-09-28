@@ -2,6 +2,7 @@ import { Hono, type Context, type Env } from 'hono'
 import { z } from 'zod'
 import { chaosPatchSchema, isPresetName, PRESETS } from './chaos.ts'
 import type { Marketplace } from './marketplace.ts'
+import { sameSecret } from './signature.ts'
 
 export interface AppOptions {
   marketplaces: Map<string, Marketplace>
@@ -67,7 +68,8 @@ export function createApp(options: AppOptions): Hono {
     if (!marketplace) return problem(c, 404, 'unknown_marketplace', 'No such marketplace')
     marketplace.api.requests += 1
 
-    if (c.req.header('authorization') !== `Bearer ${marketplace.definition.apiKey}`) {
+    const key = marketplace.definition.apiKey
+    if (key === '' || !sameSecret(`Bearer ${key}`, c.req.header('authorization'))) {
       marketplace.api.unauthorized += 1
       return problem(c, 401, 'unauthorized', 'Missing or invalid API key')
     }
@@ -142,7 +144,10 @@ export function createApp(options: AppOptions): Hono {
   const control = new Hono()
 
   control.use('*', async (c, next) => {
-    if (options.controlToken !== null && c.req.header('x-control-token') !== options.controlToken) {
+    if (
+      options.controlToken !== null &&
+      !sameSecret(options.controlToken, c.req.header('x-control-token'))
+    ) {
       return problem(c, 401, 'unauthorized', 'Invalid control token')
     }
     await next()

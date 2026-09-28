@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 
 /**
  * Webhook signature, in the shape most marketplaces and payment providers use:
@@ -35,4 +35,14 @@ export function verify(
   const a = Buffer.from(expected, 'hex')
   const b = Buffer.from(received, 'hex')
   return a.length === b.length && a.length > 0 && timingSafeEqual(a, b)
+}
+
+/**
+ * Compares a presented secret (API key, control token) in constant time:
+ * hashing first gives both sides the same length whatever was sent.
+ */
+export function sameSecret(expected: string, given: string | undefined): boolean {
+  if (given === undefined || expected === '') return false
+  const digest = (value: string): Buffer => createHash('sha256').update(value).digest()
+  return timingSafeEqual(digest(expected), digest(given))
 }

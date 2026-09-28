@@ -1,7 +1,7 @@
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { createRandom } from '../src/random.ts'
-import { sign, verify } from '../src/signature.ts'
+import { sameSecret, sign, verify } from '../src/signature.ts'
 import { TokenBucket } from '../src/tokenBucket.ts'
 
 describe('createRandom', () => {
@@ -121,5 +121,15 @@ describe('webhook signature', () => {
     expect(verify('s', header, '{}', 1_000 + 301)).toBe(false)
     expect(verify('s', 'garbage', '{}', 1_000)).toBe(false)
     expect(verify('s', 't=1000,v1=', '{}', 1_000)).toBe(false)
+  })
+})
+
+describe('sameSecret', () => {
+  it('accepts only the exact secret', () => {
+    expect(sameSecret('control-token', 'control-token')).toBe(true)
+    expect(sameSecret('control-token', 'control-toke')).toBe(false)
+    expect(sameSecret('control-token', 'control-token ')).toBe(false)
+    expect(sameSecret('control-token', undefined)).toBe(false)
+    expect(sameSecret('', '')).toBe(false)
   })
 })

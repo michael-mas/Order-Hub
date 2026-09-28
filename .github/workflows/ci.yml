@@ -89,6 +89,10 @@ jobs:
     name: End to end and resilience
     needs: [node, hub]
     runs-on: ubuntu-latest
+    env:
+      # Shared by e2e/stack.sh and the tests that drive the simulator directly.
+      HUB_API_TOKEN: e2e-hub-token
+      SIMULATOR_CONTROL_TOKEN: e2e-control-token
     services:
       postgres:
         image: postgres:16
@@ -159,6 +163,8 @@ jobs:
     name: Demo image (SQLite, single container)
     needs: [node, hub]
     runs-on: ubuntu-latest
+    env:
+      SIMULATOR_CONTROL_TOKEN: ci-control-token
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -166,9 +172,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: docker build -f docker/demo/Dockerfile -t order-hub-demo .
-      - name: Start the demo exactly as a host would
+      - name: Start the demo as a host would, the simulator opened for the tests
         run: |
-          docker run -d --name demo -p 3000:3000 -p 8100:8100 -e PORT=3000 order-hub-demo
+          docker run -d --name demo -p 3000:3000 -p 8100:8100 -e PORT=3000 \
+            -e SIMULATOR_HOST=0.0.0.0 -e SIMULATOR_CONTROL_TOKEN="$SIMULATOR_CONTROL_TOKEN" order-hub-demo
           for i in $(seq 1 90); do curl -fs http://127.0.0.1:3000/api/health && break; sleep 2; done
           curl -fsS http://127.0.0.1:3000/api/health
       - run: npm ci
@@ -200,7 +207,7 @@ jobs:
       - name: Start with the limits of a free instance, and time it
         run: |
           start=$(date +%s)
-          docker run -d --name demo --memory=512m --cpus=0.1 -p 3000:3000 -p 8100:8100 -e PORT=3000 order-hub-demo
+          docker run -d --name demo --memory=512m --cpus=0.1 -p 3000:3000 -e PORT=3000 order-hub-demo
           for i in $(seq 1 150); do curl -fs -o /dev/null http://127.0.0.1:3000/api/health && break; sleep 2; done
           curl -fsS http://127.0.0.1:3000/api/health
           echo "healthy after $(( $(date +%s) - start )) s"

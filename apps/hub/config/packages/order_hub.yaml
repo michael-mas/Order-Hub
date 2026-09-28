@@ -12,6 +12,13 @@ framework:
             limit: 4
             rate: { interval: '1 second', amount: 1 }
             cache_pool: cache.rate_limiter
+        # Model analyses per day, all callers together; then the rule engine
+        # answers alone (ADR 0004).
+        model_analyses:
+            policy: fixed_window
+            limit: '%env(int:MODEL_DAILY_ANALYSES)%'
+            interval: '1 day'
+            cache_pool: cache.rate_limiter
 
     cache:
         pools:

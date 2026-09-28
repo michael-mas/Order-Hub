@@ -9,6 +9,9 @@ export DATABASE_URL="${E2E_DATABASE_URL:-postgresql://app:app@127.0.0.1:5432/app
 export MARKETPLACE_BASE_URL=http://127.0.0.1:8100
 export ANTHROPIC_API_KEY=''
 export APP_ENV=dev
+# Same service tokens as a real deployment; the tests read them too.
+export HUB_API_TOKEN="${HUB_API_TOKEN:-e2e-hub-token}"
+export SIMULATOR_CONTROL_TOKEN="${SIMULATOR_CONTROL_TOKEN:-e2e-control-token}"
 
 wait_for() {
   local url=$1 name=$2
@@ -31,6 +34,7 @@ start() {
   )
 
   HUB_URL=http://127.0.0.1:8000 PORT=8100 SIMULATOR_SEED="${SIMULATOR_SEED:-424242}" \
+    CONTROL_TOKEN="$SIMULATOR_CONTROL_TOKEN" \
     nohup npm run start --workspace @order-hub/marketplace --prefix "$ROOT" >"$STATE/marketplace.log" 2>&1 &
   echo $! >"$STATE/marketplace.pid"
 

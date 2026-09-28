@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { compare, type HubOrder, type TruthOrder } from '@/lib/consistency'
-import { hubUrl, simulatorHeaders, simulatorUrl, throttle } from '@/lib/proxy'
+import { hubHeaders, hubUrl, simulatorHeaders, simulatorUrl, throttle } from '@/lib/proxy'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +59,10 @@ export async function GET() {
         )
       }
       const rows = hubPageSchema.parse(
-        await json(`${hubUrl()}/api/orders?itemsPerPage=${PAGE}&page=${page}&order[id]=asc`),
+        await json(
+          `${hubUrl()}/api/orders?itemsPerPage=${PAGE}&page=${page}&order[id]=asc`,
+          hubHeaders(),
+        ),
       )
       hub.push(...rows)
       if (rows.length < PAGE) break

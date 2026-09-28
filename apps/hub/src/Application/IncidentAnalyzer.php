@@ -37,6 +37,7 @@ class IncidentAnalyzer
         private readonly ChannelStates $states,
         private readonly FailedMessages $failed,
         private readonly ModelAnalyst $model,
+        private readonly ModelBudget $budget,
         private readonly Journal $journal,
         private readonly ClockInterface $clock,
     ) {
@@ -48,14 +49,16 @@ class IncidentAnalyzer
 
         $fallbackReason = null;
         $analysis = null;
-        if ($this->model->isConfigured()) {
+        if (!$this->model->isConfigured()) {
+            $fallbackReason = 'No model configured.';
+        } elseif (!$this->budget->spend()) {
+            $fallbackReason = \sprintf('Today\'s budget of %d model analyses is spent.', $this->budget->dailyLimit());
+        } else {
             try {
                 $analysis = $this->model->analyze($context);
             } catch (AnalystUnavailable $e) {
                 $fallbackReason = $e->getMessage();
             }
-        } else {
-            $fallbackReason = 'No model configured.';
         }
         $analysis ??= new RuleBasedAnalyst()->analyze($context)->withEngine(RuleBasedAnalyst::ENGINE, $fallbackReason);
 

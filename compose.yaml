@@ -1,5 +1,6 @@
 # Everything, locally: `docker compose up --build`, then open
 # http://localhost:3000. Demo secrets only; override them for any deployment.
+# Ports are published on 127.0.0.1 only: nothing here is meant for a network.
 
 x-hub-env: &hub-env
   APP_SECRET: ${APP_SECRET:-change-me-for-any-real-deployment}
@@ -11,6 +12,7 @@ x-hub-env: &hub-env
   ATLAS_API_KEY: atlas-demo-key
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+  HUB_API_TOKEN: ${HUB_API_TOKEN:-compose-hub-token}
 
 services:
   postgres:
@@ -44,7 +46,7 @@ services:
   hub:
     build: apps/hub
     environment: *hub-env
-    ports: ['8000:8000']
+    ports: ['127.0.0.1:8000:8000']
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -67,7 +69,8 @@ services:
       dockerfile: apps/marketplace/Dockerfile
     environment:
       HUB_URL: http://hub:8000
-    ports: ['8100:8100']
+      CONTROL_TOKEN: ${SIMULATOR_CONTROL_TOKEN:-compose-control-token}
+    ports: ['127.0.0.1:8100:8100']
 
   console:
     build:
@@ -75,8 +78,10 @@ services:
       dockerfile: apps/console/Dockerfile
     environment:
       HUB_URL: http://hub:8000
+      HUB_API_TOKEN: ${HUB_API_TOKEN:-compose-hub-token}
       SIMULATOR_URL: http://marketplace:8100
-    ports: ['3000:3000']
+      SIMULATOR_CONTROL_TOKEN: ${SIMULATOR_CONTROL_TOKEN:-compose-control-token}
+    ports: ['127.0.0.1:3000:3000']
     depends_on: [hub, marketplace]
 
 volumes:
