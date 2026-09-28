@@ -56,7 +56,8 @@ apps/hub           Symfony 8.1 + API Platform 4 + Messenger — voir son README
   src/Infrastructure DBAL, HTTP, limiteur, Messenger, Claude ; src/Controller fins
 apps/console       Next.js 16 ; proxy serveur en liste blanche (src/lib/routes.ts)
 e2e                Playwright (console.spec, resilience.spec) ; stack.sh
-docs/              PLAN, ARCHITECTURE, adr/ (0001 → 0006), JOURNAL, console.png
+docs/              PLAN, ARCHITECTURE, adr/ (0001 → 0008), JOURNAL, console.png
+SECURITY.md        modèle de menace ; .trivyignore.yaml : exceptions datées
 compose.yaml       postgres, migrate, hub, worker, marketplace, console
 docker/demo/       image unique de la démo publique + start.sh (testable en natif)
 render.yaml        Blueprint Render de la démo
@@ -74,6 +75,13 @@ render.yaml        Blueprint Render de la démo
 - Hub : SQL portable PostgreSQL + SQLite (ADR 0007) — pas de `xmax`, pas de
   type `uuid` Doctrine (binaire hors PostgreSQL : utiliser `guid`) ; la suite
   PHPUnit tourne sur les deux (`DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db`).
+- Hub, couches (ADR 0008, Deptrac) : `Application` ne dépend que de `Domain`
+  (ports : `Transactions`, `MessageDispatcher`, `Locks`…) ; adaptateurs et
+  handlers Messenger dans `Infrastructure` ; classes du domaine mappées en XML
+  (`config/doctrine/`). API du hub derrière `HUB_API_TOKEN` (refus par défaut).
+- Sécurité : aucune écriture relayée par la console sans règle de limite
+  (`src/lib/routes.ts`, testé) ; images non root (UID numérique), épinglées par
+  digest ; actions CI épinglées par SHA.
 - Hub : ordre des versions par `version` dans des upserts conditionnels ; tout effet de
   bord dispatché dans la transaction de la décision (ADR 0005) ; points de
   reprise par page (ADR 0006) ; chaque décision journalisée.
@@ -109,5 +117,11 @@ render.yaml        Blueprint Render de la démo
   `apps/console` : ignorés par git, ne jamais les commiter.
 - `rm -rf chemin/*` après un `cd` est bloqué : vider les caches avec
   `bin/console cache:clear`.
+- SQLite (démo) : transactions d'écriture en `BEGIN IMMEDIATE` (middleware
+  `SqliteWriteTransactions`), sinon « database is locked » sous charge.
+- Deptrac, Composer (dev) : non installables ici ; Deptrac tourne en CI.
+- Docker local : si le démon s'arrête, `dockerd &`. Trivy / Hadolint en local :
+  `docker run --network host` avec `SSL_CERT_FILE` pointant sur
+  `/root/.ccr/ca-bundle.crt` monté (proxy TLS).
 - Démo en natif : `HUB_DIR=… SIMULATOR_DIR=… CONSOLE_SERVER=…/standalone/apps/console/server.js
   DATA_DIR=… docker/demo/start.sh` (copier `.next/static` dans la sortie standalone).

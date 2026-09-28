@@ -14,6 +14,31 @@ La démo publique réunit ces services dans une seule image, sur un fichier
 SQLite éphémère au lieu de PostgreSQL ; seule la console y est exposée
 (ADR 0007, `docker/demo/`).
 
+## Couches du hub (ADR 0008)
+
+```
+Controller ──► Application ──► Domain
+                   ▲
+Infrastructure ────┘  (adaptateurs des ports : DBAL, Messenger, Lock,
+                       RateLimiter, HTTP, Claude)
+```
+
+Le domaine ne dépend de rien ; les cas d'usage ne connaissent que le domaine
+et leurs ports (`Transactions`, `MessageDispatcher`, `Locks`, `JournalReader`,
+`ModelBudget`…). Les handlers Messenger sont des adaptateurs. Deptrac le vérifie
+en CI.
+
+## Frontières de confiance
+
+| Appelant            | Porte                                   | Contrôle                                        |
+| ------------------- | --------------------------------------- | ----------------------------------------------- |
+| navigateur          | console (`/`, `/api/...`)               | CSP à nonce, liste blanche, même origine, 16 Kio, limites de fréquence |
+| console             | hub `/api/...`                          | jeton de service, temps constant, refus par défaut |
+| marketplace         | hub `/webhooks/{canal}`                 | HMAC sur le corps brut, horodatage signé        |
+| console, tests      | simulateur `/control/...`               | jeton de contrôle, temps constant               |
+
+Détail et limites : [`SECURITY.md`](../SECURITY.md).
+
 ## Garanties et mécanismes
 
 1. **Exactement une fois, en effet.** Un événement webhook déjà vu (clé
@@ -50,6 +75,12 @@ SQLite éphémère au lieu de PostgreSQL ; seule la console y est exposée
 8. **Observable.** Chaque décision écrit une entrée de journal dans sa propre
    transaction : commande créée, mise à jour, doublon, version périmée,
    webhook refusé, quota, reprise, échec, rejeu, opération manuelle, analyse.
+   Les logs techniques sortent en JSON sur la sortie d'erreur.
+9. **Borné.** Toutes les heures, la rétention supprime par lots le journal au
+   delà de 30 jours et les identifiants de webhooks au-delà de 7 jours ; les
+   commandes restent. Sous SQLite, les transactions d'écriture prennent le
+   verrou dès leur début (`BEGIN IMMEDIATE`) : sous charge, les écrivains
+   attendent leur tour au lieu d'échouer.
 
 ## Flux
 

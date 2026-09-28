@@ -105,9 +105,11 @@ e2e/stack.sh start        # simulateur, hub, worker, console ; base dédiée app
 
 Une seule image, sans base de données à provisionner : le hub, son worker, le
 simulateur et la console tournent ensemble sur un fichier SQLite éphémère,
-recréé à chaque démarrage (et au plus tard toutes les 24 h,
-`DEMO_RESET_AFTER_HOURS`). Seule la console est exposée ; elle parle au hub et
-au simulateur en local, à travers sa liste blanche.
+recréé à chaque démarrage, puis sur place au plus tard toutes les 24 h
+(`DEMO_RESET_AFTER_HOURS`) ou dès que le simulateur atteint son plafond de
+commandes. Seule la console est exposée ; le hub et le simulateur écoutent sur
+127.0.0.1 et ne répondent qu'à ses jetons de service, tirés au hasard à chaque
+démarrage. L'image tourne sans privilèges et s'arrête proprement sur `SIGTERM`.
 
 ```bash
 docker build -f docker/demo/Dockerfile -t order-hub-demo .
@@ -178,7 +180,8 @@ les fonctions serverless n'offrent ni l'un ni l'autre. Un site sur Vercel
   rien, un humain clique.
 - Sans `ANTHROPIC_API_KEY`, un moteur de règles répond dans le même format.
   Les tests et la démo publique fonctionnent sans clé ; la console limite la
-  fréquence des analyses.
+  fréquence des analyses, et le hub leur nombre quotidien par le modèle
+  (`MODEL_DAILY_ANALYSES`, 50 par défaut) : au-delà, les règles répondent.
 
 Décision complète : [ADR 0004](docs/adr/0004-analyste-ia-encadre.md).
 
@@ -194,12 +197,25 @@ Décision complète : [ADR 0004](docs/adr/0004-analyste-ia-encadre.md).
 | Bout en bout              | Playwright, bureau et mobile                      | système complet                                 |
 | Accessibilité             | axe (WCAG 2.1 AA, aucune violation sérieuse)      | console                                         |
 | Résilience                | scénario `storm` + vérité terrain                 | système complet                                 |
-| Architecture              | Deptrac (le domaine ignore le framework)          | hub                                             |
+| Architecture              | Deptrac : domaine pur, application sans framework ([ADR 0008](docs/adr/0008-couches-et-frontieres-de-confiance.md)) | hub |
 | Analyse statique et style | PHPStan niveau max, PHP-CS-Fixer, TypeScript strict, ESLint | partout                               |
+| Sécurité                  | tests des gardes (jeton, CSP, écritures d'un autre site, limites) ; CodeQL ; Trivy | console, hub, images |
+| Chaîne d'approvisionnement | `npm audit`, `composer audit`, Hadolint, ShellCheck, Dependabot | dépôt                          |
 
 Tout tourne en CI à chaque commit : la suite du hub sur les deux bases, la
 construction et le démarrage des images Docker, et la suite de bout en bout
 deux fois, contre la pile PostgreSQL et contre l'image de démo SQLite.
+Couverture des tests unitaires (Vitest, lignes) : simulateur 96 %, console
+94 %.
+
+## Sécurité
+
+Modèle de menace, protections et limites assumées : [`SECURITY.md`](SECURITY.md).
+En bref : CSP stricte à nonce et en-têtes de sécurité sur la console ;
+écritures venues d'un autre site refusées, corps bornés, limites de fréquence ;
+API du hub derrière un jeton de service ; budget quotidien d'appels au modèle ;
+images sans privilèges, épinglées par digest, scannées ; actions CI épinglées
+par SHA, jetons en lecture seule.
 
 ## Documentation
 
@@ -210,6 +226,7 @@ deux fois, contre la pile PostgreSQL et contre l'image de démo SQLite.
 - [`apps/marketplace/README.md`](apps/marketplace/README.md) — API du simulateur
 - [`apps/hub/README.md`](apps/hub/README.md) — API du hub, exploitation
 - [`docker/demo/`](docker/demo/) — image et script de la démo autonome
+- [`SECURITY.md`](SECURITY.md) — signalement, modèle de menace
 
 Données de démonstration uniquement : aucun marchand, aucune commande, aucun
 acheteur réel.

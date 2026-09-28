@@ -4,6 +4,56 @@
 > Entrées les plus récentes en haut. L'historique du portfolio qui occupait ce
 > dépôt reste dans git (commit `90d44ec`, branche `feat/bootstrap`).
 
+## 2026-09-28 — durcissement : relecture « DevOps, sécurité, full stack »
+
+- **Demande de Michael** : ne pas passer au second POC tant qu'un DevOps, un
+  spécialiste sécurité ou un développeur full stack trouverait des défauts.
+- **Audit** (mené comme une relecture externe), puis corrigé, testé, poussé :
+  1. *Démo publique* : aucun en-tête de sécurité, écritures d'un autre site
+     acceptées, corps non bornés, génération de commandes illimitée (mémoire
+     d'une instance de 512 Mo), analyse IA sans plafond de coût. → CSP à
+     nonce, en-têtes, garde même origine, 16 Kio, limites de fréquence,
+     plafond de commandes, budget quotidien du modèle.
+  2. *Faux verdict* du contrôle « exactement une fois » au-delà de 5 000
+     commandes (lecture tronquée en silence). → refus explicite.
+  3. *API du hub sans authentification*, CORS inutile. → jeton de service,
+     refus par défaut ; bundle CORS retiré (ADR 0008).
+  4. *Comparaisons de secrets non constantes* dans le simulateur. → temps
+     constant.
+  5. *Conteneurs* : root, secrets de démo fixes, `SIGTERM` ignoré par le
+     script (PID 1), conteneur arrêté à chaque remise à zéro, services
+     internes à l'écoute sur toutes les interfaces, ports compose publiés
+     sur le réseau. → utilisateur numérique non privilégié, secrets
+     aléatoires, superviseur (arrêt propre en 2,3 s mesuré en local, remise à
+     zéro sur place), 127.0.0.1.
+  6. *Chaîne d'approvisionnement* : actions non épinglées, jeton CI en
+     écriture par défaut, aucun audit, paquet abandonné (`qossmic/deptrac`),
+     npm et ses 8 failles HIGH dans les images d'exécution. → SHA, lecture
+     seule, `npm audit`/`composer audit`, Hadolint, ShellCheck, Trivy
+     (CRITICAL bloquante, exceptions datées dans `.trivyignore.yaml`),
+     CodeQL, Dependabot (sans versions majeures), `deptrac/deptrac`, npm
+     retiré.
+  7. *Clean Architecture* : l'Application dépendait de DBAL, Messenger, Lock
+     et d'une entité Doctrine. → ports et adaptateurs, handlers en
+     Infrastructure, `ChannelState` dans le domaine (mapping XML), Deptrac
+     durci (ADR 0008).
+  8. *Tables sans fin* (journal, dédoublonnage). → rétention horaire par lots.
+  9. *Console peu testée en unitaire* (45 % des lignes). → 94 %, frontière
+     serveur comprise ; une mutation de la garde est bien détectée.
+  10. *Logs de production* inondés de dépréciations tierces. → coupées en
+      production, visibles en développement et en CI.
+- **Défaut trouvé par la CI en chemin** (run 34) : sous tempête, l'image de
+  démo échouait par intermittence (« database is locked » : transaction
+  SQLite différée qui lit puis écrit après une écriture concurrente). Les
+  runs précédents étaient passés par chance. → middleware DBAL
+  `BEGIN IMMEDIATE` + attente de 5 s, test qui reproduit la contention ;
+  suite complète verte contre la démo SQLite locale, zéro verrouillage.
+- **Accepté et daté** : une faille CRITICAL dans le binaire FrankenPHP amont
+  (module OpenAPI non utilisé), jusqu'au 2026-12-31 ou à une image corrigée.
+- **Écart constaté une fois, non reproduit** : un passage local de PHPUnit sur
+  SQLite a échoué (5 tests) puis dix passages identiques ont réussi ; la CI
+  rejoue la suite SQLite à chaque commit.
+
 ## 2026-09-28 — hébergement sans abonnement supplémentaire
 
 - **Demande de Michael** : ne pas cumuler les abonnements ; son portfolio est
