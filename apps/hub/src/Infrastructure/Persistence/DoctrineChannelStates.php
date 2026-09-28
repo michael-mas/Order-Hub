@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence;
 
 use App\Application\ChannelStates;
-use App\Entity\ChannelState;
+use App\Domain\Channel\ChannelState;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class DoctrineChannelStates implements ChannelStates

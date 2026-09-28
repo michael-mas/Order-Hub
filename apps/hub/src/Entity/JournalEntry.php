@@ -8,7 +8,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Append-only. Rows are inserted by {@see \App\Infrastructure\Persistence\DbalJournal}
+ * Append-only. Rows are inserted by the persistence adapter (DbalJournal)
  * inside the transaction of the decision they record; this class only maps the table.
  */
 #[ORM\Entity(readOnly: true)]

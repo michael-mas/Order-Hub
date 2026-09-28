@@ -1,5 +1,6 @@
-# Architecture rules, checked in CI: the domain knows no framework, the
-# application knows no infrastructure, and nothing depends on controllers.
+# Architecture rules, checked in CI: the domain and the application know no
+# framework and no infrastructure; controllers reach the use cases only
+# through the application; nothing depends on controllers.
 deptrac:
   paths:
     - ./src
@@ -29,12 +30,13 @@ deptrac:
         - type: classLike
           value: ^(Symfony|Doctrine|ApiPlatform|Anthropic)\\.*
   ruleset:
+    # The domain is plain PHP; the use cases know only the domain and their
+    # own ports (ADR 0008).
     Domain: ~
-    Entity:
-      - Framework
     Application:
       - Domain
-      - Entity
+    # Persistence and API read models: framework metadata, no logic.
+    Entity:
       - Framework
     Infrastructure:
       - Application
@@ -44,5 +46,4 @@ deptrac:
     Controller:
       - Application
       - Domain
-      - Infrastructure
       - Framework

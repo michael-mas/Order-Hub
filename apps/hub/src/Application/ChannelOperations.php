@@ -8,8 +8,6 @@ use App\Application\Message\PollChannel;
 use App\Domain\Channel\ChannelRegistry;
 use App\Domain\Channel\PollMode;
 use App\Domain\Journal\EventType;
-use Doctrine\DBAL\Connection;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * What an operator can do to a channel. The incident analyst only ever
@@ -21,15 +19,15 @@ class ChannelOperations
         private readonly ChannelRegistry $channels,
         private readonly ChannelStates $states,
         private readonly Journal $journal,
-        private readonly MessageBusInterface $bus,
-        private readonly Connection $connection,
+        private readonly MessageDispatcher $messages,
+        private readonly Transactions $transactions,
     ) {
     }
 
     public function pause(string $channel): void
     {
         $this->channels->get($channel);
-        $this->connection->transactional(function () use ($channel): void {
+        $this->transactions->run(function () use ($channel): void {
             $state = $this->states->get($channel);
             if ($state->isPaused()) {
                 return;
@@ -43,7 +41,7 @@ class ChannelOperations
     public function resume(string $channel): void
     {
         $this->channels->get($channel);
-        $this->connection->transactional(function () use ($channel): void {
+        $this->transactions->run(function () use ($channel): void {
             $state = $this->states->get($channel);
             if (!$state->isPaused() && null === $state->getThrottledUntil()) {
                 return;
@@ -57,8 +55,8 @@ class ChannelOperations
     public function reconcile(string $channel): void
     {
         $this->channels->get($channel);
-        $this->connection->transactional(function () use ($channel): void {
-            $this->bus->dispatch(new PollChannel($channel, PollMode::Reconcile));
+        $this->transactions->run(function () use ($channel): void {
+            $this->messages->dispatch(new PollChannel($channel, PollMode::Reconcile));
             $this->journal->record(EventType::ReconcileRequested, 'Reconciliation requested by an operator.', $channel);
         });
     }

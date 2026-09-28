@@ -6,11 +6,11 @@ namespace App\Tests\Integration;
 
 use App\Application\AcknowledgementResult;
 use App\Application\ChannelStates;
-use App\Application\Handler\AcknowledgeOrderHandler;
 use App\Application\MarketplaceUnavailable;
 use App\Application\Message\AcknowledgeOrder;
 use App\Application\OrderIngestor;
 use App\Domain\Order\IngestionSource;
+use App\Infrastructure\Messenger\Handler\AcknowledgeOrderHandler;
 use App\Infrastructure\Persistence\Row;
 use App\Tests\Support\FakeMarketplace;
 use App\Tests\Support\Orders;

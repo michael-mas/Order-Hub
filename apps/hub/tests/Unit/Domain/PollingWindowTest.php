@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain;
 
+use App\Domain\Channel\ChannelState;
 use App\Domain\Channel\PollingWindow;
 use App\Domain\Channel\PollMode;
-use App\Entity\ChannelState;
 use PHPUnit\Framework\TestCase;
 
 final class PollingWindowTest extends TestCase

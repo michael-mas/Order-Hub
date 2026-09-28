@@ -2,30 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Handler;
+namespace App\Application;
 
-use App\Application\AcknowledgementResult;
-use App\Application\ChannelRateLimiter;
-use App\Application\ChannelStates;
-use App\Application\Journal;
-use App\Application\MarketplaceClient;
-use App\Application\MarketplaceThrottled;
-use App\Application\Message\AcknowledgeOrder;
-use App\Application\OrderStore;
 use App\Domain\Channel\ChannelRegistry;
 use App\Domain\Journal\EventType;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
-use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 
 /**
  * Sends the acknowledgement. Waiting (paused channel, quota) is not a failure:
- * the message comes back later without spending a retry. A marketplace outage
- * is a failure: retried with backoff, then parked in the failure queue.
+ * {@see TryAgainLater}, without spending a retry. A marketplace outage is a
+ * failure: its exception propagates, to be retried with backoff. A refusal
+ * that no retry can change is {@see CannotSucceed}.
  */
-#[AsMessageHandler]
-final readonly class AcknowledgeOrderHandler
+final readonly class OrderAcknowledger
 {
     private const int PAUSED_RECHECK_MS = 30_000;
 
@@ -40,9 +29,9 @@ final readonly class AcknowledgeOrderHandler
     ) {
     }
 
-    public function __invoke(AcknowledgeOrder $message): void
+    public function acknowledge(string $orderId): void
     {
-        $order = $this->orders->find($message->orderId);
+        $order = $this->orders->find($orderId);
         if (null === $order || $order->acknowledged) {
             return;
         }
@@ -50,15 +39,15 @@ final readonly class AcknowledgeOrderHandler
         $state = $this->states->get($order->channel);
         $now = $this->clock->now();
         if ($state->isPaused()) {
-            throw new RecoverableMessageHandlingException('Channel paused.', retryDelay: self::PAUSED_RECHECK_MS);
+            throw new TryAgainLater('Channel paused.', self::PAUSED_RECHECK_MS);
         }
         if ($state->isThrottled($now) && null !== $state->getThrottledUntil()) {
             $delay = max(1, $state->getThrottledUntil()->getTimestamp() - $now->getTimestamp());
-            throw new RecoverableMessageHandlingException('Channel throttled.', retryDelay: $delay * 1000);
+            throw new TryAgainLater('Channel throttled.', $delay * 1000);
         }
         $wait = $this->limiter->acquire($order->channel);
         if ($wait > 0) {
-            throw new RecoverableMessageHandlingException('Local quota spent.', retryDelay: $wait * 1000);
+            throw new TryAgainLater('Local quota spent.', $wait * 1000);
         }
 
         try {
@@ -70,7 +59,7 @@ final readonly class AcknowledgeOrderHandler
                 'retry_after_seconds' => $e->retryAfterSeconds,
                 'external_id' => $order->externalId,
             ]);
-            throw new RecoverableMessageHandlingException($e->getMessage(), previous: $e, retryDelay: $e->retryAfterSeconds * 1000);
+            throw new TryAgainLater($e->getMessage(), $e->retryAfterSeconds * 1000, $e);
         }
 
         switch ($result) {
@@ -92,7 +81,7 @@ final readonly class AcknowledgeOrderHandler
                     'result' => $result->value,
                 ]);
                 // Retrying cannot change the answer: straight to the failure queue.
-                throw new UnrecoverableMessageHandlingException(\sprintf('Acknowledgement refused: %s.', $result->value));
+                throw new CannotSucceed(\sprintf('Acknowledgement refused: %s.', $result->value));
         }
     }
 }

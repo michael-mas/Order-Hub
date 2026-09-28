@@ -2,50 +2,38 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
-
-use Doctrine\ORM\Mapping as ORM;
+namespace App\Domain\Channel;
 
 /**
- * What the hub remembers about each channel between two polls.
+ * What the hub remembers about each channel between two polls. Plain PHP:
+ * its persistence mapping lives in config/doctrine/ (ADR 0008).
  */
-#[ORM\Entity]
-#[ORM\Table(name: 'channel_states')]
 class ChannelState
 {
     /**
      * Latest `updated_at` read by regular polls, in the marketplace's own
      * clock: the next poll starts there, minus the overlap.
      */
-    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $cursor = null;
 
     /**
      * Where an unfinished reconciliation sweep resumes. Null when no sweep is
      * in progress: the next one starts from the full reconciliation window.
      */
-    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $reconcileFrom = null;
 
     /** Set from the marketplace's Retry-After: no call before this instant. */
-    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $throttledUntil = null;
 
     /** Set by an operator: no poll and no acknowledgement until resumed. */
-    #[ORM\Column]
     private bool $paused = false;
 
-    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lastPollAt = null;
 
-    #[ORM\Column(length: 16, nullable: true)]
     private ?string $lastPollOutcome = null;
 
-    public function __construct(
-        #[ORM\Id]
-        #[ORM\Column(length: 32)]
-        private string $code,
-    ) {
+    public function __construct(private string $code)
+    {
     }
 
     public function getCode(): string

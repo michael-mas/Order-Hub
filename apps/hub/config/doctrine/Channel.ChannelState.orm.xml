@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The domain's ChannelState stays free of persistence attributes: its
+     mapping lives here. Same table as the migrations create. -->
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Domain\Channel\ChannelState" table="channel_states">
+        <id name="code" type="string" length="32"/>
+        <field name="cursor" type="datetime_immutable" nullable="true"/>
+        <field name="reconcileFrom" type="datetime_immutable" nullable="true"/>
+        <field name="throttledUntil" type="datetime_immutable" nullable="true"/>
+        <field name="paused" type="boolean"/>
+        <field name="lastPollAt" type="datetime_immutable" nullable="true"/>
+        <field name="lastPollOutcome" type="string" length="16" nullable="true"/>
+    </entity>
+</doctrine-mapping>

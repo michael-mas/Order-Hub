@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Handler;
+namespace App\Infrastructure\Messenger\Handler;
 
 use App\Application\ChannelPoller;
 use App\Application\Message\PollChannel;

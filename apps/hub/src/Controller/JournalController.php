@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Application\JournalReader;
 use App\Domain\Journal\Severity;
-use App\Infrastructure\Persistence\ReadModel;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
@@ -18,7 +18,7 @@ final class JournalController extends AbstractController
      * which is how the console tails the journal.
      */
     #[Route('/api/journal', name: 'journal', methods: ['GET'], priority: 10)]
-    public function __invoke(ReadModel $readModel, #[MapQueryString(validationFailedStatusCode: 422)] JournalQuery $query = new JournalQuery()): JsonResponse
+    public function __invoke(JournalReader $readModel, #[MapQueryString(validationFailedStatusCode: 422)] JournalQuery $query = new JournalQuery()): JsonResponse
     {
         $entries = $readModel->journal(
             $query->after,

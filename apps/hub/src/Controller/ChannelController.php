@@ -6,9 +6,9 @@ namespace App\Controller;
 
 use App\Application\ChannelOperations;
 use App\Application\ChannelStates;
+use App\Application\JournalReader;
 use App\Domain\Channel\ChannelRegistry;
 use App\Domain\Channel\UnknownChannel;
-use App\Infrastructure\Persistence\ReadModel;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +21,7 @@ final class ChannelController extends AbstractController
     public function __construct(
         private readonly ChannelRegistry $channels,
         private readonly ChannelStates $states,
-        private readonly ReadModel $readModel,
+        private readonly JournalReader $readModel,
         private readonly ClockInterface $clock,
     ) {
     }

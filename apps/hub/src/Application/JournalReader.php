@@ -6,8 +6,20 @@ namespace App\Application;
 
 use App\Domain\Journal\Severity;
 
+/**
+ * Read side of the journal and of order statistics, shaped for the console
+ * and the incident analyst.
+ */
 interface JournalReader
 {
+    /**
+     * Newest entries first when `$afterId` is null (initial load), otherwise
+     * every entry after it in ascending order (live tail).
+     *
+     * @return list<array{id: string, occurred_at: string, channel: ?string, type: string, severity: string, message: string, context: array<string, mixed>}>
+     */
+    public function journal(?string $afterId, int $limit, Severity $minSeverity = Severity::Info, ?string $channel = null): array;
+
     /**
      * @return list<array{id: string, occurred_at: string, channel: ?string, type: string, severity: string, message: string, context: array<string, mixed>}>
      */

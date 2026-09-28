@@ -11,7 +11,6 @@ use App\Domain\Journal\EventType;
 use App\Domain\Order\IngestionOutcome;
 use App\Domain\Order\IngestionSource;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\Lock\LockFactory;
 
 /**
  * Reads a channel's recent changes page by page and feeds them to the ingestor.
@@ -33,7 +32,7 @@ class ChannelPoller
         private readonly OrderIngestor $ingestor,
         private readonly Journal $journal,
         private readonly PollingWindow $window,
-        private readonly LockFactory $locks,
+        private readonly Locks $locks,
         private readonly ClockInterface $clock,
     ) {
     }
@@ -41,8 +40,8 @@ class ChannelPoller
     public function poll(string $channelCode, PollMode $mode): PollReport
     {
         $channel = $this->channels->get($channelCode);
-        $lock = $this->locks->createLock('poll-'.$channelCode, ttl: 120);
-        if (!$lock->acquire()) {
+        $lock = $this->locks->tryAcquire('poll-'.$channelCode, 120);
+        if (null === $lock) {
             return PollReport::skipped('already_running');
         }
 

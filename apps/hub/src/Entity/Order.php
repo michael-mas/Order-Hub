@@ -14,7 +14,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Read model of an imported order. Rows are written by {@see \App\Infrastructure\Persistence\OrderStore}
+ * Read model of an imported order. Rows are written by the persistence adapter (OrderStore)
  * in a single atomic upsert, so this entity has no setters.
  */
 #[ORM\Entity(readOnly: true)]

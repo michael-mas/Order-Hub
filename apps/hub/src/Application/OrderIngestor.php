@@ -10,9 +10,7 @@ use App\Domain\Order\ExternalOrder;
 use App\Domain\Order\IngestionOutcome;
 use App\Domain\Order\IngestionSource;
 use App\Domain\Order\InvalidOrderPayload;
-use Doctrine\DBAL\Connection;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * The single entry point for an order version, whatever brought it (webhook,
@@ -22,10 +20,10 @@ use Symfony\Component\Messenger\MessageBusInterface;
 class OrderIngestor
 {
     public function __construct(
-        private readonly Connection $connection,
+        private readonly Transactions $transactions,
         private readonly OrderStore $orders,
         private readonly Journal $journal,
-        private readonly MessageBusInterface $bus,
+        private readonly MessageDispatcher $messages,
         private readonly ClockInterface $clock,
     ) {
     }
@@ -50,7 +48,7 @@ class OrderIngestor
             return null;
         }
 
-        return $this->connection->transactional(function () use ($channel, $order, $source, $eventId): IngestionOutcome {
+        return $this->transactions->run(function () use ($channel, $order, $source, $eventId): IngestionOutcome {
             $result = $this->orders->upsert($channel, $order, $source, $this->clock->now());
             $context = [
                 'order_id' => $result->orderId,
@@ -103,8 +101,8 @@ class OrderIngestor
             $channel,
             $context,
         );
-        // Same transaction as the order: the Doctrine transport writes the
-        // message in the same database, so it cannot be lost or sent twice.
-        $this->bus->dispatch(new AcknowledgeOrder($result->orderId, $channel));
+        // Same transaction as the order: the queue lives in the same
+        // database, so the message cannot be lost or sent twice (ADR 0005).
+        $this->messages->dispatch(new AcknowledgeOrder($result->orderId, $channel));
     }
 }

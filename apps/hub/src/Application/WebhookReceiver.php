@@ -11,9 +11,7 @@ use App\Domain\Order\ExternalOrder;
 use App\Domain\Order\InvalidOrderPayload;
 use App\Domain\Webhook\SignatureCheck;
 use App\Domain\Webhook\WebhookSignature;
-use Doctrine\DBAL\Connection;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * Verifies, deduplicates and queues a webhook. Ingestion itself happens in a
@@ -25,8 +23,8 @@ class WebhookReceiver
         private readonly ChannelRegistry $channels,
         private readonly WebhookEventStore $events,
         private readonly Journal $journal,
-        private readonly MessageBusInterface $bus,
-        private readonly Connection $connection,
+        private readonly MessageDispatcher $messages,
+        private readonly Transactions $transactions,
         private readonly ClockInterface $clock,
     ) {
     }
@@ -72,7 +70,7 @@ class WebhookReceiver
             return WebhookResult::Invalid;
         }
 
-        return $this->connection->transactional(function () use ($channelCode, $eventId, $order): WebhookResult {
+        return $this->transactions->run(function () use ($channelCode, $eventId, $order): WebhookResult {
             if (!$this->events->remember($channelCode, $eventId, $this->clock->now())) {
                 $this->journal->record(
                     EventType::WebhookDuplicate,
@@ -83,7 +81,7 @@ class WebhookReceiver
 
                 return WebhookResult::Duplicate;
             }
-            $this->bus->dispatch(new IngestOrder($channelCode, $order, $eventId));
+            $this->messages->dispatch(new IngestOrder($channelCode, $order, $eventId));
 
             return WebhookResult::Accepted;
         });

@@ -19,6 +19,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+            # Domain classes carry no mapping attributes (ADR 0008).
+            Domain:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/config/doctrine'
+                prefix: 'App\Domain'
 
 when@test:
     doctrine:

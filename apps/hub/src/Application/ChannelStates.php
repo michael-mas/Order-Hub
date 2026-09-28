@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application;
 
-use App\Entity\ChannelState;
+use App\Domain\Channel\ChannelState;
 
 interface ChannelStates
 {

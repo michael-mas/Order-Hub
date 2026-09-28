@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Application\FailedMessages;
-use App\Infrastructure\Persistence\ReadModel;
+use App\Application\JournalReader;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,7 +15,7 @@ final class OverviewController extends AbstractController
 {
     /** What happened in the last few minutes, for the console header. */
     #[Route('/api/overview', name: 'overview', methods: ['GET'], priority: 10)]
-    public function __invoke(ReadModel $readModel, FailedMessages $failed, ClockInterface $clock): JsonResponse
+    public function __invoke(JournalReader $readModel, FailedMessages $failed, ClockInterface $clock): JsonResponse
     {
         $now = $clock->now();
         $byChannel = $readModel->orderStatsByChannel($now);
