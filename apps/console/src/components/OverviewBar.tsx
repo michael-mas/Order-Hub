@@ -19,14 +19,24 @@ function Metric({
   )
 }
 
-export function OverviewBar({ overview }: { overview: Overview | null }) {
+/**
+ * `failedMessages`, when known, comes from the failure-queue panel's own
+ * polling: both show the same number, never two moments of the queue.
+ */
+export function OverviewBar({
+  overview,
+  failedMessages,
+}: {
+  overview: Overview | null
+  failedMessages?: number | undefined
+}) {
   const events = overview?.events_last_15_min ?? {}
   const absorbed =
     (events['webhook.duplicate'] ?? 0) +
     (events['order.duplicate_ignored'] ?? 0) +
     (events['order.stale_ignored'] ?? 0)
   const throttles = events['channel.rate_limited'] ?? 0
-  const failed = overview?.failed_messages ?? 0
+  const failed = failedMessages ?? overview?.failed_messages ?? 0
   const show = (n: number | undefined) => (overview ? String(n ?? 0) : '—')
 
   return (

@@ -18,6 +18,14 @@ function status(channel: Channel, now: number): { tone: Tone; label: string } {
     return { tone: 'warn', label: `backing off until ${time(channel.throttled_until)}` }
   }
   if (channel.last_poll_outcome === 'failed') return { tone: 'danger', label: 'last poll failed' }
+  // Polls are skipped while the marketplace makes the hub wait: say so
+  // rather than showing a healthy channel that is not being read.
+  if (
+    channel.last_poll_at &&
+    now - Date.parse(channel.last_poll_at) > 3 * channel.poll_interval_seconds * 1000
+  ) {
+    return { tone: 'warn', label: 'polling late' }
+  }
   if (channel.last_poll_outcome === 'partial')
     return { tone: 'warn', label: 'catching up a backlog' }
   return { tone: 'ok', label: 'healthy' }
@@ -90,7 +98,9 @@ function ChannelCard({
         </div>
         <div>
           <dt className="text-faint">Last poll</dt>
-          <dd className="font-mono text-base tabular-nums">{ago(channel.last_poll_at, now)}</dd>
+          <dd className="font-mono text-base tabular-nums">
+            {channel.last_poll_at ? ago(channel.last_poll_at, now) : 'not yet'}
+          </dd>
         </div>
       </dl>
 

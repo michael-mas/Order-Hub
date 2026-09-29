@@ -4,6 +4,22 @@
 > Entrées les plus récentes en haut. L'historique du portfolio qui occupait ce
 > dépôt reste dans git (commit `90d44ec`, branche `feat/bootstrap`).
 
+## 2026-09-29 — démo en ligne, relecture du front
+
+- **En ligne** : <https://order-hub-demo.onrender.com>, déployée par Michael
+  (Blueprint) après le correctif des capabilities.
+- **Vérification** : cet environnement de développement ne peut pas joindre
+  `onrender.com` ni le stockage de GHCR (politique réseau) ; le parcours a
+  donc été rejoué sur le même code et le même script de démo, en production
+  locale : page vivante en moins d'une seconde, tempête, analyse, retour au
+  calme, « Consistent » ~1 min 20 après ; aucune erreur de console ni requête
+  en échec, bureau et mobile.
+- **Front, défauts relevés et corrigés** : aucun guide pour le visiteur
+  (→ parcours en 4 étapes sous le titre) ; file d'échecs à deux valeurs
+  différentes selon le panneau (→ une seule source) ; canal « healthy »
+  alors que ses polls étaient en retard (→ « polling late ») ; « Last poll
+  never » au démarrage, lu comme une panne (→ « not yet »).
+
 ## 2026-09-29 — premier déploiement Render : binaire refusé
 
 - **Constat** (déploiement de Michael) : `frankenphp: Operation not

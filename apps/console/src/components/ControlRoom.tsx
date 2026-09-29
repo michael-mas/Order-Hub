@@ -50,6 +50,27 @@ export function ControlRoom({ publicDemo = false }: { publicDemo?: boolean }) {
             webhooks, late listings, quotas, outages. The journal shows every decision the hub
             takes; the exactly-once check proves nothing was lost or doubled.
           </p>
+          <ol
+            aria-label="Try it"
+            className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs leading-5 text-muted"
+          >
+            <li>
+              <span className="font-mono text-accent">1</span> Switch both channels to{' '}
+              <span className="text-text">Storm</span>
+            </li>
+            <li>
+              <span className="font-mono text-accent">2</span> Watch the journal absorb it, then{' '}
+              <span className="text-text">Analyse now</span>
+            </li>
+            <li>
+              <span className="font-mono text-accent">3</span> Back to{' '}
+              <span className="text-text">Calm</span>, <span className="text-text">Replay all</span>
+            </li>
+            <li>
+              <span className="font-mono text-accent">4</span>{' '}
+              <span className="text-text">Verify now</span> until it reads Consistent
+            </li>
+          </ol>
           {publicDemo && (
             <p className="mt-2 text-xs leading-5 text-faint">
               Public demo: every visitor drives the same simulated marketplaces, actions are
@@ -58,7 +79,7 @@ export function ControlRoom({ publicDemo = false }: { publicDemo?: boolean }) {
           )}
         </div>
 
-        <OverviewBar overview={overview.data} />
+        <OverviewBar overview={overview.data} failedMessages={failed.data?.count} />
 
         <div className="grid gap-4 lg:grid-cols-[minmax(300px,1fr)_minmax(0,1.6fr)_minmax(300px,1.1fr)]">
           <ChannelsPanel

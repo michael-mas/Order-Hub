@@ -115,6 +115,22 @@ describe('OverviewBar', () => {
     expect(screen.getByText('2')).toHaveClass('text-danger')
   })
 
+  it('shows the failure count the failure queue itself polled', () => {
+    render(
+      <OverviewBar
+        failedMessages={3}
+        overview={{
+          generated_at: '2026-09-28T10:00:00Z',
+          orders: 1,
+          acknowledged: 1,
+          failed_messages: 2,
+          events_last_15_min: {},
+        }}
+      />,
+    )
+    expect(screen.getByText('Failure queue').nextSibling).toHaveTextContent('3')
+  })
+
   it('shows placeholders before the first answer', () => {
     render(<OverviewBar overview={null} />)
     expect(screen.getAllByText('—')).toHaveLength(5)

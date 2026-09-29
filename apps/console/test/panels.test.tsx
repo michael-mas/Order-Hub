@@ -300,6 +300,32 @@ describe('ChannelsPanel', () => {
   })
 })
 
+describe('channel status', () => {
+  const now = Date.parse('2026-09-28T10:00:00Z')
+  const show = (c: Channel) =>
+    render(
+      <ChannelsPanel
+        channels={[c]}
+        marketplaces={null}
+        error={null}
+        now={now}
+        onChange={() => undefined}
+      />,
+    )
+
+  it('flags a channel whose polls are late instead of calling it healthy', () => {
+    show({ ...channel, last_poll_at: '2026-09-28T09:59:40Z' })
+    expect(screen.getByText('polling late')).toBeInTheDocument()
+    expect(screen.queryByText('healthy')).not.toBeInTheDocument()
+  })
+
+  it('says "not yet" before the first poll', () => {
+    show({ ...channel, last_poll_at: null })
+    expect(screen.getByText('not yet')).toBeInTheDocument()
+    expect(screen.getByText('healthy')).toBeInTheDocument()
+  })
+})
+
 describe('ControlRoom', () => {
   it('assembles the live panels and tells visitors the demo is shared', async () => {
     mockFetch({
@@ -323,6 +349,9 @@ describe('ControlRoom', () => {
     expect(screen.getByText('live')).toBeInTheDocument()
     expect(screen.getByText(/Public demo: every visitor drives the same/)).toBeInTheDocument()
     expect(screen.getByText(/SQLite \(PostgreSQL in production\)/)).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('list', { name: 'Try it' })).getAllByRole('listitem'),
+    ).toHaveLength(4)
   })
 
   it('says when the hub is unreachable', async () => {

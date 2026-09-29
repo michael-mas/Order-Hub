@@ -5,6 +5,10 @@
 **Un hub d'intégration e-commerce qui importe les commandes de places de marché
 capricieuses — exactement une fois, et en le prouvant.**
 
+**Démo en ligne : <https://order-hub-demo.onrender.com>** — instance gratuite :
+après 15 minutes sans visite, elle s'endort et le premier chargement la
+réveille (environ une minute, selon Render).
+
 ![La salle de contrôle pendant un pic de ventes simulé](docs/console.png)
 
 Un marchand vend sur plusieurs canaux. Les commandes arrivent par des webhooks
