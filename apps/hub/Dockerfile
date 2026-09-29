@@ -15,8 +15,12 @@ ENV APP_ENV=prod \
     SERVER_NAME=:8000
 WORKDIR /app
 COPY --from=vendor /app /app
-# Unprivileged at run time: it writes only to var/ and Caddy's state.
-RUN rm -f .env.dev .env.test \
+# Unprivileged at run time: it writes only to var/ and Caddy's state. The
+# upstream binary carries a file capability (bind ports < 1024) that hosts
+# dropping every capability refuse to exec; port 8000 needs none, so a plain
+# copy replaces it.
+RUN cp /usr/local/bin/frankenphp /tmp/frankenphp && mv /tmp/frankenphp /usr/local/bin/frankenphp \
+    && rm -f .env.dev .env.test \
     && php bin/console cache:warmup \
     && chown -R www-data:www-data var /data/caddy /config/caddy
 # www-data, by id: a numeric user satisfies runAsNonRoot checks.

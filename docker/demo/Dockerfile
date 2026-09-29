@@ -48,8 +48,12 @@ COPY --from=console /build/apps/console/.next/standalone /app/console
 COPY --from=console /build/apps/console/.next/static /app/console/apps/console/.next/static
 COPY docker/demo/start.sh /usr/local/bin/order-hub-demo
 # Everything runs unprivileged; it writes only to var/, Caddy's state, the
-# console's cache and /tmp (the SQLite file).
-RUN chown -R www-data:www-data /app/hub/var /data/caddy /config/caddy /app/console/apps/console/.next
+# console's cache and /tmp (the SQLite file). The upstream FrankenPHP binary
+# carries a file capability (bind ports < 1024) that hosts dropping every
+# capability refuse to exec (Render does); port 8000 needs none, so a plain
+# copy replaces it.
+RUN cp /usr/local/bin/frankenphp /tmp/frankenphp && mv /tmp/frankenphp /usr/local/bin/frankenphp \
+    && chown -R www-data:www-data /app/hub/var /data/caddy /config/caddy /app/console/apps/console/.next
 # www-data, by id: a numeric user satisfies runAsNonRoot checks.
 USER 33:33
 

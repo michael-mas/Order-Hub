@@ -223,7 +223,7 @@ jobs:
           scan --severity CRITICAL --exit-code 1 --skip-db-update
       - name: Start the demo as a host would, the simulator opened for the tests
         run: |
-          docker run -d --name demo -p 3000:3000 -p 8100:8100 -e PORT=3000 \
+          docker run -d --name demo --cap-drop ALL --security-opt no-new-privileges -p 3000:3000 -p 8100:8100 -e PORT=3000 \
             -e SIMULATOR_HOST=0.0.0.0 -e SIMULATOR_CONTROL_TOKEN="$SIMULATOR_CONTROL_TOKEN" order-hub-demo
           for i in $(seq 1 90); do curl -fs http://127.0.0.1:3000/api/health && break; sleep 2; done
           curl -fsS http://127.0.0.1:3000/api/health
@@ -258,7 +258,7 @@ jobs:
       - name: Start with the limits of a free instance, and time it
         run: |
           start=$(date +%s)
-          docker run -d --name demo --memory=512m --cpus=0.1 -p 3000:3000 -e PORT=3000 order-hub-demo
+          docker run -d --name demo --cap-drop ALL --security-opt no-new-privileges --memory=512m --cpus=0.1 -p 3000:3000 -e PORT=3000 order-hub-demo
           for i in $(seq 1 150); do curl -fs -o /dev/null http://127.0.0.1:3000/api/health && break; sleep 2; done
           curl -fsS http://127.0.0.1:3000/api/health
           echo "healthy after $(( $(date +%s) - start )) s"

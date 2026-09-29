@@ -1,6 +1,11 @@
 # Everything, locally: `docker compose up --build`, then open
 # http://localhost:3000. Demo secrets only; override them for any deployment.
 # Ports are published on 127.0.0.1 only: nothing here is meant for a network.
+# Application containers run without any Linux capability, as strict hosts do.
+
+x-hardened: &hardened
+  cap_drop: [ALL]
+  security_opt: ['no-new-privileges:true']
 
 x-hub-env: &hub-env
   APP_SECRET: ${APP_SECRET:-change-me-for-any-real-deployment}
@@ -29,6 +34,7 @@ services:
       - postgres:/var/lib/postgresql/data
 
   migrate:
+    <<: *hardened
     build: apps/hub
     environment: *hub-env
     command:
@@ -44,6 +50,7 @@ services:
         condition: service_healthy
 
   hub:
+    <<: *hardened
     build: apps/hub
     environment: *hub-env
     ports: ['127.0.0.1:8000:8000']
@@ -52,6 +59,7 @@ services:
         condition: service_completed_successfully
 
   worker:
+    <<: *hardened
     build: apps/hub
     environment: *hub-env
     command:
@@ -64,6 +72,7 @@ services:
         condition: service_completed_successfully
 
   marketplace:
+    <<: *hardened
     build:
       context: .
       dockerfile: apps/marketplace/Dockerfile
@@ -73,6 +82,7 @@ services:
     ports: ['127.0.0.1:8100:8100']
 
   console:
+    <<: *hardened
     build:
       context: .
       dockerfile: apps/console/Dockerfile

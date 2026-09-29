@@ -4,6 +4,23 @@
 > Entrées les plus récentes en haut. L'historique du portfolio qui occupait ce
 > dépôt reste dans git (commit `90d44ec`, branche `feat/bootstrap`).
 
+## 2026-09-29 — premier déploiement Render : binaire refusé
+
+- **Constat** (déploiement de Michael) : `frankenphp: Operation not
+  permitted`, la démo redémarre en boucle. Le binaire FrankenPHP amont porte
+  une capability de fichier (`cap_net_bind_service`, pour les ports < 1024) ;
+  Render retire toutes les capabilities aux conteneurs, et le noyau refuse
+  alors d'exécuter ce binaire pour un utilisateur non privilégié (passage non
+  root du 2026-09-28). La CI ne l'a pas vu : Docker y garde les capabilities
+  par défaut.
+- **Reproduit** en local : `docker run --cap-drop ALL --user 33:33` → même
+  erreur ; une copie du binaire, sans capability, démarre.
+- **Corrigé** : les images hub et démo remplacent le binaire par une copie
+  (le port 8000 n'a besoin d'aucun privilège). La CI lance désormais l'image
+  de démo avec `--cap-drop ALL --security-opt no-new-privileges`, et compose
+  fait de même pour les conteneurs applicatifs : l'écart avec les hébergeurs
+  stricts est couvert.
+
 ## 2026-09-28 — durcissement : relecture « DevOps, sécurité, full stack »
 
 - **Demande de Michael** : ne pas passer au second POC tant qu'un DevOps, un
