@@ -1,5 +1,11 @@
 import { StatusDot } from './ui'
 
+export const AUTHOR = {
+  name: 'Michael Mas',
+  role: 'Full-stack developer — PHP/Symfony, React/TypeScript, e-commerce integrations',
+  linkedin: 'https://www.linkedin.com/in/michaelmasdev',
+} as const
+
 export function Header({ live }: { live: boolean }) {
   return (
     <header className="border-b border-line bg-sunken/60">
@@ -21,6 +27,12 @@ export function Header({ live }: { live: boolean }) {
             href="https://github.com/michael-mas/Order-Hub"
           >
             Source on GitHub
+          </a>
+          <a
+            className="text-xs text-muted underline-offset-4 hover:text-text hover:underline"
+            href={AUTHOR.linkedin}
+          >
+            {AUTHOR.name} on LinkedIn
           </a>
         </div>
       </div>

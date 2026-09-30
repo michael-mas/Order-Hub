@@ -349,9 +349,22 @@ describe('ControlRoom', () => {
     expect(screen.getByText('live')).toBeInTheDocument()
     expect(screen.getByText(/Public demo: every visitor drives the same/)).toBeInTheDocument()
     expect(screen.getByText(/SQLite \(PostgreSQL in production\)/)).toBeInTheDocument()
-    expect(
-      within(screen.getByRole('list', { name: 'Try it' })).getAllByRole('listitem'),
-    ).toHaveLength(4)
+    const steps = screen.getByRole('list', { name: 'Try it' })
+    expect(within(steps).getAllByRole('listitem')).toHaveLength(4)
+    expect(within(steps).getByRole('link', { name: 'Verify now' })).toHaveAttribute(
+      'href',
+      '#consistency',
+    )
+    for (const link of within(steps).getAllByRole('link')) {
+      expect(document.querySelector(link.getAttribute('href') ?? '')).not.toBeNull()
+    }
+    // Who built it, reachable from the page itself.
+    const author = screen.getAllByRole('link', { name: /Michael Mas/ })
+    expect(author.length).toBeGreaterThan(0)
+    for (const link of author) {
+      expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/michaelmasdev')
+    }
+    expect(screen.getByText(/imports each one\s+exactly once/)).toBeInTheDocument()
   })
 
   it('says when the hub is unreachable', async () => {

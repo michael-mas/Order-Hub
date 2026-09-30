@@ -4,6 +4,18 @@
 > Entrées les plus récentes en haut. L'historique du portfolio qui occupait ce
 > dépôt reste dans git (commit `90d44ec`, branche `feat/bootstrap`).
 
+## 2026-09-30 — relecture « recruteur » de la démo
+
+- Sur une copie identique (même commit, même configuration de production ;
+  `onrender.com` reste inaccessible depuis l'environnement de développement).
+- **Défauts** : auteur absent de la page ; texte réservé aux développeurs ;
+  compétences visibles seulement en pied de page ; sur mobile, le guide
+  renvoyait à des boutons plusieurs écrans plus bas.
+- **Corrigé** : « Built by Michael Mas » et lien LinkedIn (en-tête et
+  introduction), une phrase en langage courant, la pile technique sous le
+  texte, les étapes du guide en liens vers leurs panneaux. Testé (liens,
+  ancres existantes), axe vert sur bureau et mobile.
+
 ## 2026-09-29 — démo en ligne, relecture du front
 
 - **En ligne** : <https://order-hub-demo.onrender.com>, déployée par Michael

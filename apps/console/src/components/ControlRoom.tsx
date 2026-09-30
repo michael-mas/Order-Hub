@@ -6,11 +6,13 @@ import { usePolling } from '@/lib/usePolling'
 import { ChannelsPanel } from './ChannelsPanel'
 import { ConsistencyCheck } from './ConsistencyCheck'
 import { FailureQueue } from './FailureQueue'
-import { Header } from './Header'
+import { AUTHOR, Header } from './Header'
 import { IncidentAnalyst } from './IncidentAnalyst'
 import { JournalFeed } from './JournalFeed'
 import { OverviewBar } from './OverviewBar'
 import { RecentOrders } from './RecentOrders'
+
+const STEP = 'text-text underline underline-offset-4 hover:text-accent'
 
 const loadChannels = async () => (await api.channels()).channels
 const loadMarketplaces = async () => (await api.marketplaces()).marketplaces
@@ -41,34 +43,67 @@ export function ControlRoom({ publicDemo = false }: { publicDemo?: boolean }) {
       <Header live={overview.error === null} />
       <main className="mx-auto max-w-[1500px] space-y-4 px-4 py-6 sm:px-6">
         <div className="max-w-3xl">
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          <p className="text-xs leading-5 text-muted">
+            Built by{' '}
+            <a
+              className="text-text underline underline-offset-4 hover:text-accent"
+              href={AUTHOR.linkedin}
+            >
+              {AUTHOR.name}
+            </a>{' '}
+            · {AUTHOR.role}
+          </p>
+          <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
             Importing orders from marketplaces that misbehave — exactly once.
           </h1>
+          <p className="mt-2 text-sm leading-6 text-text">
+            When a marketplace loses, repeats or delays orders, this system still imports each one
+            exactly once, and proves it live.
+          </p>
           <p className="mt-2 text-sm leading-6 text-muted">
             Two simulated marketplaces send orders through signed webhooks and paginated APIs.
             Switch one to <em className="text-text not-italic">Storm</em>: lost and duplicated
             webhooks, late listings, quotas, outages. The journal shows every decision the hub
             takes; the exactly-once check proves nothing was lost or doubled.
           </p>
+          <p className="mt-2 font-mono text-[11px] leading-5 text-faint">
+            Symfony 8 · API Platform · Messenger · Next.js 16 · React 19 · TypeScript · Playwright ·
+            Claude
+          </p>
           <ol
             aria-label="Try it"
             className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs leading-5 text-muted"
           >
             <li>
-              <span className="font-mono text-accent">1</span> Switch both channels to{' '}
-              <span className="text-text">Storm</span>
+              <span className="font-mono text-accent">1</span> Switch both{' '}
+              <a className={STEP} href="#channels">
+                channels
+              </a>{' '}
+              to <span className="text-text">Storm</span>
             </li>
             <li>
-              <span className="font-mono text-accent">2</span> Watch the journal absorb it, then{' '}
-              <span className="text-text">Analyse now</span>
+              <span className="font-mono text-accent">2</span> Watch the{' '}
+              <a className={STEP} href="#journal">
+                journal
+              </a>{' '}
+              absorb it, then{' '}
+              <a className={STEP} href="#analyst">
+                Analyse now
+              </a>
             </li>
             <li>
               <span className="font-mono text-accent">3</span> Back to{' '}
-              <span className="text-text">Calm</span>, <span className="text-text">Replay all</span>
+              <span className="text-text">Calm</span>,{' '}
+              <a className={STEP} href="#failures">
+                Replay all
+              </a>
             </li>
             <li>
               <span className="font-mono text-accent">4</span>{' '}
-              <span className="text-text">Verify now</span> until it reads Consistent
+              <a className={STEP} href="#consistency">
+                Verify now
+              </a>{' '}
+              until it reads Consistent
             </li>
           </ol>
           {publicDemo && (
